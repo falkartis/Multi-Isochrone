@@ -78,6 +78,32 @@ class DestinationSet {
 	}
 }
 
+/*
+ *	https://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
+ *	http://www.movable-type.co.uk/scripts/latlong.html
+*/
+function degToRad(degrees: number) {
+	return degrees * (Math.PI / 180);
+}
+
+function earthCoordinateDistanceKm(p1: Place, p2: Place) {
+	var earthRadiusKm = 6371;
+
+	var dLat = degToRad(p2.Lat - p1.Lat);
+	var dLon = degToRad(p2.Long - p1.Long);
+
+	var lat1 = degToRad(p1.Lat);
+	var lat2 = degToRad(p2.Lat);
+
+	var sdLat = Math.sin(dLat / 2);
+	var sdLon = Math.sin(dLon / 2);
+
+	var a = sdLat * sdLat + sdLon * sdLon * Math.cos(lat1) * Math.cos(lat2); 
+	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+	return earthRadiusKm * c;
+}
+
+
 // TESTS:
 console.log("Tests:");
 
