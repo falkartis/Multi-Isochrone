@@ -2,11 +2,11 @@ let map: google.maps.Map;
 
 function initMap(): void {
 
-	const myLatLng = { lat: -25.363, lng: 131.044 };
+	const myLatLng = { lat: 0, lng: 0 };
 	map = new google.maps.Map(
 		document.getElementById("map") as HTMLElement,
 		{
-			zoom: 4,
+			zoom: 2,
 			center: myLatLng,
 		}
 	);
@@ -61,7 +61,7 @@ class DestinationSet {
 	constructor(destinations: Destination[]) {
 		this.Destinations = destinations;
 	}
-	computeCostFrom(origin: Place, fn: (a: Place, b: Place) => number) {
+	ComputeCostFrom(origin: Place, fn: (a: Place, b: Place) => number) {
 		let totalCost: number = 0;
 		for (let destination of this.Destinations) {
 			var cost = destination.Wheight * fn(origin, destination.Place);
@@ -69,12 +69,60 @@ class DestinationSet {
 		}
 		return totalCost;
 	}
-	computeCostFromEuclidean(origin: Place) {
-		return this.computeCostFrom(origin, (a, b) => {
+	ComputeCostFromEuclidean(origin: Place) {
+		return this.ComputeCostFrom(origin, (a, b) => {
 			var dLat: number = a.Lat - b.Lat;
 			var dLong: number = a.Long - b.Long;
 			return Math.sqrt((dLat * dLat) + (dLong * dLong));
 		});
+	}
+	GetBoundingBox() {
+		if (this.Destinations.length == 0)
+			return null;
+		var bb: BoundingBox = new BoundingBox(this.Destinations[0].Place);
+		// Yes the first one is repeated, should be fixed.
+		for (let dest of this.Destinations) {
+			bb.Expand(dest.Place);
+		}
+		return bb;
+	}
+	GetWheightedCentroid() {
+		var lats: number = 0;
+		var longs: number = 0;
+		var wheights: number = 0;
+		for (let dest of this.Destinations) {
+			lats += dest.Place.Lat * dest.Wheight;
+			longs += dest.Place.Long * dest.Wheight;
+			wheights += dest.Wheight;
+		}
+		//console.log({lats, longs, wheights});
+		return new Place(lats / wheights, longs / wheights);
+	}
+}
+
+class BoundingBox {
+	Min: Place;
+	Max: Place;
+	constructor(place: Place) {
+		this.Min = place;
+		this.Max = place;
+	}
+	Expand(place: Place) {
+		if (place.Lat < this.Min.Lat) { this.Min.Lat = place.Lat; }
+		if (place.Lat > this.Max.Lat) { this.Max.Lat = place.Lat; }
+		if (place.Long < this.Min.Long) { this.Min.Long = place.Long; }
+		if (place.Long > this.Max.Long) { this.Max.Long = place.Long; }
+	}
+	ExpandBy(percent: number) {
+		var perOne: number = percent / 100;
+		var dLat: number = this.Max.Lat - this.Min.Lat;
+		var dLong: number = this.Max.Long - this.Min.Long;
+		var latInc: number = dLat * perOne;
+		var longInc: number = dLong * perOne;
+		this.Min.Lat = this.Min.Lat - (latInc / 2);
+		this.Max.Lat = this.Max.Lat + (latInc / 2);
+		this.Min.Long = this.Min.Long - (longInc / 2);
+		this.Max.Long = this.Max.Long + (longInc / 2);
 	}
 }
 
@@ -114,11 +162,27 @@ function testTotalCost() {
 	var places: Place[] = [new Place(1,0), new Place(0,1), new Place(-1,0), new Place(0,-1)];
 	var destinations: Destination[] = [new Destination(places[0], 1), new Destination(places[1], 2), new Destination(places[2], 3), new Destination(places[3], 4)];
 	var dSet: DestinationSet= new DestinationSet(destinations);
-	var tCost: number = dSet.computeCostFromEuclidean(new Place(0,0));
+	var tCost: number = dSet.ComputeCostFromEuclidean(new Place(0,0));
 	if (tCost == 10) {
 		console.log("10 is OK");
 	} else {
 		console.log("Total cost is: " + tCost + "\n Expected 10.");
 	}
 }
+function testRealPlaces() {
+	var barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 1);
+	var paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 6);
+	var berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 2);
+	var zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 4);
+	var dSet: DestinationSet = new DestinationSet([barcelona, paris, berlin, zurich]);
+	var origin: Place = new Place(46.8730811, 3.2886396);
+	var tCost: number = dSet.ComputeCostFrom(origin, earthCoordinateDistanceKm);
+	console.log("Total cost: " + tCost + "Km");
+	var centroid: Place = dSet.GetWheightedCentroid();
+	console.log(centroid);
+	var tCost2: number = dSet.ComputeCostFrom(centroid, earthCoordinateDistanceKm);
+	console.log("Total cost: " + tCost2 + "Km");
+
+}
 testTotalCost();
+testRealPlaces();
