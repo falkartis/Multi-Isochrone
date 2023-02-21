@@ -17,5 +17,16 @@ body {
 }
 
 input {
-	width: 50px;
+	width: 40px;
+}
+#sideBar {
+	float: left;
+	width: 10%;
+	height: 100%;
+}
+#log {
+	max-height: 50%;
+}
+#log p {
+	margin: 0;
 }

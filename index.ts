@@ -1,5 +1,7 @@
 let map: google.maps.Map;
 
+let LatLngList: google.maps.LatLng[] = [];
+
 function initMap(): void {
 
 	const myLatLng = { lat: 0, lng: 0 };
@@ -7,15 +9,9 @@ function initMap(): void {
 		document.getElementById("map") as HTMLElement,
 		{
 			zoom: 2,
-			center: myLatLng,
+			center: { lat: 0, lng: 0 },
 		}
 	);
-
-	new google.maps.Marker({
-		position: myLatLng,
-		map,
-		title: "Hello World!",
-	});
 }
 
 // declare global {
@@ -27,12 +23,45 @@ window.initMap = initMap;
 
 
 const form = document.getElementById("markerForm") as HTMLFormElement;
+const formWheight = document.getElementById("wheight") as HTMLInputElement;
+const formLat = document.getElementById("lat") as HTMLInputElement;
+const formLong = document.getElementById("long") as HTMLInputElement;
+const logTag = document.getElementById("log") as HTMLElement;
 
 form.onsubmit = () => {
-	const formData = new FormData(form);
 
+
+	const formData = new FormData(form);
 	console.log(formData);
 
+	var p = document.createElement('p');
+
+	var w: number = +formWheight.value;
+	var lat: number = +formLat.value;
+	var lng: number = +formLong.value;
+	p.innerHTML = "W:" + w + ", lat:" + lat + ", long:" + lng;
+	logTag.appendChild(p);
+
+	var newlatLng: google.maps.LatLng = new google.maps.LatLng(lat, lng);
+
+	new google.maps.Marker({
+		position: newlatLng,
+		map,
+		title: "W:" + formWheight.value,
+	});
+
+	LatLngList.push(newlatLng);
+
+	var latlngbounds: google.maps.LatLngBounds = new google.maps.LatLngBounds();
+
+	for(var latLng of LatLngList)
+		latlngbounds.extend(latLng);
+
+	map.setCenter(latlngbounds.getCenter());
+	map.fitBounds(latlngbounds); 
+
+	console.log("Calling testExplore();");
+	testExplore();
 
 	return false; // prevent reload
 };
@@ -103,9 +132,18 @@ class DestinationSet {
 class BoundingBox {
 	Min: Place;
 	Max: Place;
-	constructor(place: Place) {
-		this.Min = place;
-		this.Max = place;
+	get SW() {return new Place(this.Min.Lat, this.Min.Long);}
+	get NW() {return new Place(this.Max.Lat, this.Min.Long);}
+	get NE() {return new Place(this.Max.Lat, this.Max.Long);}
+	get SE() {return new Place(this.Min.Lat, this.Max.Long);}
+
+	constructor(place: Place, max?: Place) {
+		this.Min = new Place(place.Lat, place.Long);
+		if (max == null) {
+			this.Max = new Place(place.Lat, place.Long);
+		} else {
+			this.Max = new Place(max.Lat, max.Long);
+		}
 	}
 	Expand(place: Place) {
 		if (place.Lat < this.Min.Lat) { this.Min.Lat = place.Lat; }
@@ -151,6 +189,76 @@ function earthCoordinateDistanceKm(p1: Place, p2: Place) {
 	return earthRadiusKm * c;
 }
 
+function DrawRectangle(box: BoundingBox, cost: number) {
+	var north: number = box.Max.Lat;
+	var south: number = box.Min.Lat;
+	var east: number = box.Max.Long;
+	var west: number = box.Min.Long;
+
+	const rectangle = new google.maps.Rectangle({
+		strokeColor: "#FF0000",
+		strokeOpacity: 0.4,
+		strokeWeight: 1,
+		fillColor: "#FF0000",
+		fillOpacity: 0.35,
+		map,
+		bounds: {north, south, east, west},
+	});
+}
+
+function QuantitizeCost(v: number, step: number) {
+	// ceil or floor, that is the question
+	return step * Math.ceil(v / step);
+}
+
+function AllEqual(v1: number, v2: number, v3: number, v4: number) {
+	return v1 == v2 && v2 == v3 && v3 == v4;
+}
+
+function explore(dSet: DestinationSet, box: BoundingBox, bandSize: number, minsize: number) {
+	console.log("inside of explore();");
+	console.log(box);
+	var p1: Place = box.SW;
+	var p2: Place = box.NW;
+	var p3: Place = box.NE;
+	var p4: Place = box.SE;
+	var c1: number = dSet.ComputeCostFrom(p1, earthCoordinateDistanceKm);
+	var c2: number = dSet.ComputeCostFrom(p2, earthCoordinateDistanceKm);
+	var c3: number = dSet.ComputeCostFrom(p3, earthCoordinateDistanceKm);
+	var c4: number = dSet.ComputeCostFrom(p4, earthCoordinateDistanceKm);
+
+	if (AllEqual(QuantitizeCost(c1, bandSize), QuantitizeCost(c2, bandSize), QuantitizeCost(c3, bandSize), QuantitizeCost(c4, bandSize))) {
+		// see: https://developers.google.com/maps/documentation/javascript/reference/visualization
+		// TODO: Paint map with translucid color based on cost.
+		DrawRectangle(box, (c1 + c2 + c3 + c4) / 4);
+	} else {
+		var dLat: number = box.Max.Lat - box.Min.Lat;
+		var dLon: number = box.Max.Long - box.Min.Long;
+
+		if (dLat < minsize && dLon < minsize) {
+			console.log("Line");
+			console.log(box);
+			// TODO: Paint "line" color.
+		} else {
+			var mid: number;
+			var childBox1: BoundingBox;
+			var childBox2: BoundingBox;
+			if (dLat > dLon) {
+				mid = (box.Min.Lat + box.Max.Lat) / 2;
+				childBox1 = new BoundingBox(box.Min, new Place(mid, box.Max.Long));
+				childBox2 = new BoundingBox(new Place(mid, box.Min.Long), box.Max);
+				explore(dSet, childBox1, bandSize, minsize);
+				explore(dSet, childBox2, bandSize, minsize);
+			} else {
+				mid = (box.Min.Long + box.Max.Long) / 2;
+				childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid));
+				childBox2 = new BoundingBox(new Place(box.Min.Lat, mid), box.Max);
+				explore(dSet, childBox1, bandSize, minsize);
+				explore(dSet, childBox2, bandSize, minsize);
+			}			
+		}
+	}
+}
 
 // TESTS:
 console.log("Tests:");
@@ -184,5 +292,16 @@ function testRealPlaces() {
 	console.log("Total cost: " + tCost2 + "Km");
 
 }
+function testExplore() {
+	console.log("inside of testExplore();");
+	var barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 1);
+	var paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 6);
+	var berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 2);
+	var zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 4);
+	var dSet: DestinationSet = new DestinationSet([barcelona, paris, berlin, zurich]);
+	console.log("calling: explore(dSet, dSet.GetBoundingBox(), 100, 1);");
+	explore(dSet, dSet.GetBoundingBox(), 10, 0.2);
+}
 testTotalCost();
 testRealPlaces();
+//testExplore();
