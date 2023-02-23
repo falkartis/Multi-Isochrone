@@ -76,6 +76,15 @@ class Place {
 		this.Lat = lat;
 		this.Long = long;
 	}
+	Scale(t: number) {
+		return new Place(this.Lat * t, this.Long * t);
+	}
+	Add(o: Place) {
+		return new Place(this.Lat + o.Lat, this.Long + o.Long);
+	}
+	Lerp(t: number, o: Place) {
+		return this.Scale(1 - t).Add(o.Scale(t));
+	}
 }
 
 class Destination {
@@ -245,16 +254,21 @@ function DrawLine(p1: Place, p2: Place) {
 		path: lineCoords,
 		geodesic: false, // does it go faster when set to false?, does it look more precise when set to true?
 		strokeColor: "#211",
-		strokeOpacity: 0.3,
+		strokeOpacity: 0.6,
 		strokeWeight: 1,
 	});
 
 	line.setMap(map);
 }
+
+
+function Interpolate(p1: Place, p2: Place, v1: number, v2: number) {
+	var t: number = v1 / (v1 - v2);
+	return p1.Lerp(t, p2);
+}
+
 function FindAndDrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place, c3: number, p4: Place, c4: number, bandSize: number) {
-	//console.log({c1, c2, c3, c4});
 	var qMin: number = QuantitizeCost(Math.min(c1, c2, c3, c4), bandSize);
-	//console.log({bandSize, qMin});
 	var v1: number = c1 - qMin;
 	var v2: number = c2 - qMin;
 	var v3: number = c3 - qMin;
@@ -264,39 +278,31 @@ function FindAndDrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place
 	index += 2 * (+(v2 > 0));
 	index += 4 * (+(v3 > 0));
 	index += 8 * (+(v4 > 0));
-	if (index < 15)
-		console.log({v1, v2, v3, v4, qMin, index});
+
+	var l1: Place;
+	var l2: Place;
 	switch (index) {
-	case 0:console.log("Why am I here?");break;
-	case 1:
-		break;
-	case 2:
-		break;
-	case 3:
-		break;
-	case 4:
-		break;
-	case 5:
-		break;
-	case 6:
-		break;
-	case 7:
-		break;
-	case 8:
-		break;
-	case 9:
-		break;
-	case 10:
-		break;
-	case 11:
-		break;
-	case 12:
-		break;
-	case 13:
-		break;
-	case 14:
-		break;
-	case 15:console.log("Why am I here?");break;
+		// CORNERS:
+		case 1:		case 14:	l1 = Interpolate(p1, p2, v1, v2);	l2 = Interpolate(p1, p4, v1, v4);	break;
+		case 2:		case 13:	l1 = Interpolate(p2, p1, v2, v1);	l2 = Interpolate(p2, p3, v2, v3);	break;
+		case 4:		case 11:	l1 = Interpolate(p3, p2, v3, v2);	l2 = Interpolate(p3, p4, v3, v4);	break;
+		case 7:		case 8:		l1 = Interpolate(p4, p1, v4, v1);	l2 = Interpolate(p4, p3, v4, v3);	break;
+		// LINE THROUGH:
+		case 6:		case 9:		l1 = Interpolate(p1, p2, v1, v2);	l2 = Interpolate(p3, p4, v3, v4);	break;
+		case 3:		case 12:	l1 = Interpolate(p1, p4, v1, v4);	l2 = Interpolate(p2, p3, v2, v3);	break;
+		// SADDLE POINT (not expected here):
+		case 5:
+		case 10:
+		// ALL EQUAL, SOLID COLOR, (Case handled somewhere else):
+		case 0:
+		case 15:
+			console.log("Why am I here?");
+			break;
+	}
+	if (l1 == null || l2 == null) {
+		console.log({v1, v2, v3, v4, qMin, index});
+	} else {
+		DrawLine(l1, l2);
 	}
 }
 
@@ -309,7 +315,7 @@ function AllEqual(v1: number, v2: number, v3: number, v4: number, v5: number) {
 	return v1 == v2 && v2 == v3 && v3 == v4 && v4 == v5;
 }
 
-function explore(dSet: DestinationSet, box: BoundingBox, bandSize: number, minsize: number) {
+function explore(dSet: DestinationSet, box: BoundingBox, bandSize: number, maxsize: number, minsize: number) {
 	// console.log("inside of explore();");
 	// console.log(box);
 	var p1: Place = box.SW;
@@ -322,19 +328,19 @@ function explore(dSet: DestinationSet, box: BoundingBox, bandSize: number, minsi
 	var c3: number = dSet.ComputeCostFrom(p3, earthCoordinateDistanceKm);
 	var c4: number = dSet.ComputeCostFrom(p4, earthCoordinateDistanceKm);
 	var c5: number = dSet.ComputeCostFrom(p5, earthCoordinateDistanceKm);
+	var dLat: number = box.Max.Lat - box.Min.Lat;
+	var dLon: number = box.Max.Long - box.Min.Long;
 
-	if (AllEqual(QuantitizeCost(c1, bandSize), QuantitizeCost(c2, bandSize), QuantitizeCost(c3, bandSize), QuantitizeCost(c4, bandSize), QuantitizeCost(c5, bandSize))) {
+	if (dLat < maxsize && dLon < maxsize && AllEqual(QuantitizeCost(c1, bandSize), QuantitizeCost(c2, bandSize), QuantitizeCost(c3, bandSize), QuantitizeCost(c4, bandSize), QuantitizeCost(c5, bandSize))) {
 		// see: https://developers.google.com/maps/documentation/javascript/reference/visualization
 		// TODO: Paint map with translucid color based on cost.
-		DrawRectangle(box, (c1 + c2 + c3 + c4) / 4);
+		//DrawRectangle(box, (c1 + c2 + c3 + c4) / 4);
 	} else {
-		var dLat: number = box.Max.Lat - box.Min.Lat;
-		var dLon: number = box.Max.Long - box.Min.Long;
 
 		if (dLat < minsize && dLon < minsize) {
 			// console.log("Line");
 			// console.log(box);
-			DrawDarkRectangle(box);
+			//DrawDarkRectangle(box);
 			FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, bandSize);
 			// TODO: Paint "line" color.
 		} else {
@@ -346,15 +352,15 @@ function explore(dSet: DestinationSet, box: BoundingBox, bandSize: number, minsi
 				mid = 0.3*box.Min.Lat + 0.7*box.Max.Lat;
 				childBox1 = new BoundingBox(box.Min, new Place(mid, box.Max.Long));
 				childBox2 = new BoundingBox(new Place(mid, box.Min.Long), box.Max);
-				explore(dSet, childBox1, bandSize, minsize);
-				explore(dSet, childBox2, bandSize, minsize);
+				explore(dSet, childBox1, bandSize, maxsize, minsize);
+				explore(dSet, childBox2, bandSize, maxsize, minsize);
 			} else {
 				//mid = (box.Min.Long + box.Max.Long) / 2;
 				mid = 0.3*box.Min.Long + 0.7*box.Max.Long;
 				childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid));
 				childBox2 = new BoundingBox(new Place(box.Min.Lat, mid), box.Max);
-				explore(dSet, childBox1, bandSize, minsize);
-				explore(dSet, childBox2, bandSize, minsize);
+				explore(dSet, childBox1, bandSize, maxsize, minsize);
+				explore(dSet, childBox2, bandSize, maxsize, minsize);
 			}			
 		}
 	}
@@ -404,10 +410,12 @@ function testExplore() {
 	var box: BoundingBox = new BoundingBox(paris.Place);
 	box.Expand(zurich.Place);
 	box.ExpandBy(80);
-	box.ExpandLatBy(170);
-	box.ExpandLongBy(20);
+	box.ExpandLatBy(230);
+	box.ExpandLongBy(40);
 	console.log("explore() start");
-	explore(dSet, box, 1000, 0.1);
+
+	explore(dSet, box, 200, 1, 0.3);
+
 	console.log("explore() end");
 
 	AddMarker(barcelona);
