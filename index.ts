@@ -214,10 +214,10 @@ function DrawRectangle(box: BoundingBox, cost: number) {
 
 	const rectangle = new google.maps.Rectangle({
 		strokeColor: "#FF0000",
-		strokeOpacity: 0.4,
+		strokeOpacity: 0.35,
 		strokeWeight: 1,
 		fillColor: "#FF0000",
-		fillOpacity: 0.35,
+		fillOpacity: 0.3,
 		map,
 		bounds: {north, south, east, west},
 	});
@@ -230,13 +230,74 @@ function DrawDarkRectangle(box: BoundingBox) {
 
 	const rectangle = new google.maps.Rectangle({
 		strokeColor: "#211",
-		strokeOpacity: 0,
-		strokeWeight: 0,
+		strokeOpacity: 0.35,
+		strokeWeight: 1,
 		fillColor: "#211",
-		fillOpacity: 0.35,
+		fillOpacity: 0.3,
 		map,
 		bounds: {north, south, east, west},
 	});
+}
+
+function DrawLine(p1: Place, p2: Place) {
+	const lineCoords = [{ lat: p1.Lat, lng: p1.Long }, { lat: p2.Lat, lng: p2.Long } ];
+	const line = new google.maps.Polyline({
+		path: lineCoords,
+		geodesic: false, // does it go faster when set to false?, does it look more precise when set to true?
+		strokeColor: "#211",
+		strokeOpacity: 0.3,
+		strokeWeight: 1,
+	});
+
+	line.setMap(map);
+}
+function FindAndDrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place, c3: number, p4: Place, c4: number, bandSize: number) {
+	//console.log({c1, c2, c3, c4});
+	var qMin: number = QuantitizeCost(Math.min(c1, c2, c3, c4), bandSize);
+	//console.log({bandSize, qMin});
+	var v1: number = c1 - qMin;
+	var v2: number = c2 - qMin;
+	var v3: number = c3 - qMin;
+	var v4: number = c4 - qMin;
+	var index: number = 0;
+	index += 1 * (+(v1 > 0));
+	index += 2 * (+(v2 > 0));
+	index += 4 * (+(v3 > 0));
+	index += 8 * (+(v4 > 0));
+	if (index < 15)
+		console.log({v1, v2, v3, v4, qMin, index});
+	switch (index) {
+	case 0:console.log("Why am I here?");break;
+	case 1:
+		break;
+	case 2:
+		break;
+	case 3:
+		break;
+	case 4:
+		break;
+	case 5:
+		break;
+	case 6:
+		break;
+	case 7:
+		break;
+	case 8:
+		break;
+	case 9:
+		break;
+	case 10:
+		break;
+	case 11:
+		break;
+	case 12:
+		break;
+	case 13:
+		break;
+	case 14:
+		break;
+	case 15:console.log("Why am I here?");break;
+	}
 }
 
 function QuantitizeCost(v: number, step: number) {
@@ -265,7 +326,7 @@ function explore(dSet: DestinationSet, box: BoundingBox, bandSize: number, minsi
 	if (AllEqual(QuantitizeCost(c1, bandSize), QuantitizeCost(c2, bandSize), QuantitizeCost(c3, bandSize), QuantitizeCost(c4, bandSize), QuantitizeCost(c5, bandSize))) {
 		// see: https://developers.google.com/maps/documentation/javascript/reference/visualization
 		// TODO: Paint map with translucid color based on cost.
-		//DrawRectangle(box, (c1 + c2 + c3 + c4) / 4);
+		DrawRectangle(box, (c1 + c2 + c3 + c4) / 4);
 	} else {
 		var dLat: number = box.Max.Lat - box.Min.Lat;
 		var dLon: number = box.Max.Long - box.Min.Long;
@@ -274,19 +335,22 @@ function explore(dSet: DestinationSet, box: BoundingBox, bandSize: number, minsi
 			// console.log("Line");
 			// console.log(box);
 			DrawDarkRectangle(box);
+			FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, bandSize);
 			// TODO: Paint "line" color.
 		} else {
 			var mid: number;
 			var childBox1: BoundingBox;
 			var childBox2: BoundingBox;
 			if (dLat > dLon) {
-				mid = (box.Min.Lat + box.Max.Lat) / 2;
+				//mid = (box.Min.Lat + box.Max.Lat) / 2;
+				mid = 0.3*box.Min.Lat + 0.7*box.Max.Lat;
 				childBox1 = new BoundingBox(box.Min, new Place(mid, box.Max.Long));
 				childBox2 = new BoundingBox(new Place(mid, box.Min.Long), box.Max);
 				explore(dSet, childBox1, bandSize, minsize);
 				explore(dSet, childBox2, bandSize, minsize);
 			} else {
-				mid = (box.Min.Long + box.Max.Long) / 2;
+				//mid = (box.Min.Long + box.Max.Long) / 2;
+				mid = 0.3*box.Min.Long + 0.7*box.Max.Long;
 				childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid));
 				childBox2 = new BoundingBox(new Place(box.Min.Lat, mid), box.Max);
 				explore(dSet, childBox1, bandSize, minsize);
@@ -329,7 +393,7 @@ function testRealPlaces() {
 
 }
 function testExplore() {
-	console.log("inside of testExplore();");
+	console.log("testExplore() start");
 	var paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 8);
 	var berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 8);
 	var barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 1);
@@ -339,15 +403,18 @@ function testExplore() {
 	//var box: BoundingBox = dSet.GetBoundingBox();
 	var box: BoundingBox = new BoundingBox(paris.Place);
 	box.Expand(zurich.Place);
-	box.ExpandBy(30);
+	box.ExpandBy(80);
 	box.ExpandLatBy(170);
 	box.ExpandLongBy(20);
-	explore(dSet, box, 50, 0.04);
+	console.log("explore() start");
+	explore(dSet, box, 1000, 0.1);
+	console.log("explore() end");
 
 	AddMarker(barcelona);
 	AddMarker(paris);
 	AddMarker(berlin);
 	AddMarker(zurich);
+	console.log("testExplore() end");
 }
 testTotalCost();
 testRealPlaces();
