@@ -301,8 +301,14 @@ function AllEqual(v1: number, v2: number, v3: number, v4: number, v5: number) {
 class Explorer {
 	DestSet: DestinationSet;
 	CostCalculator: CostCalculator;
-	constructor(dSet: DestinationSet, costCalc?: CostCalculator) {
+	BandSize: number;
+	MaxSize: number;
+	MinSize: number;
+	constructor(dSet: DestinationSet, bandSize: number, maxsize: number, minsize: number, costCalc?: CostCalculator) {
 		this.DestSet = dSet;
+		this.BandSize = bandSize;
+		this.MaxSize = maxsize;
+		this.MinSize = minsize;
 		if (costCalc == null) {
 			//TODO: choose a cheaper default calculator
 			this.CostCalculator = new HaversineDistance();
@@ -311,7 +317,7 @@ class Explorer {
 		}
 	}
 
-	Explore(box: BoundingBox, bandSize: number, maxsize: number, minsize: number) {
+	Explore(box: BoundingBox) {
 		// console.log("inside of explore();");
 		// console.log(box);
 		var p1: Place = box.SW;
@@ -327,17 +333,17 @@ class Explorer {
 		var dLat: number = box.Max.Lat - box.Min.Lat;
 		var dLon: number = box.Max.Long - box.Min.Long;
 
-		if (dLat < maxsize && dLon < maxsize && AllEqual(QuantitizeCost(c1, bandSize), QuantitizeCost(c2, bandSize), QuantitizeCost(c3, bandSize), QuantitizeCost(c4, bandSize), QuantitizeCost(c5, bandSize))) {
+		if (dLat < this.MaxSize && dLon < this.MaxSize && AllEqual(QuantitizeCost(c1, this.BandSize), QuantitizeCost(c2, this.BandSize), QuantitizeCost(c3, this.BandSize), QuantitizeCost(c4, this.BandSize), QuantitizeCost(c5, this.BandSize))) {
 			// see: https://developers.google.com/maps/documentation/javascript/reference/visualization
 			// TODO: Paint map with translucid color based on cost.
 			//DrawRectangle(box, (c1 + c2 + c3 + c4) / 4);
 		} else {
 
-			if (dLat < minsize && dLon < minsize) {
+			if (dLat < this.MinSize && dLon < this.MinSize) {
 				// console.log("Line");
 				// console.log(box);
 				//DrawDarkRectangle(box);
-				FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, bandSize);
+				FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, this.BandSize);
 				// TODO: Paint "line" color.
 			} else {
 				var mid: number;
@@ -348,15 +354,15 @@ class Explorer {
 					//mid = 0.3*box.Min.Lat + 0.7*box.Max.Lat;
 					childBox1 = new BoundingBox(box.Min, new Place(mid, box.Max.Long));
 					childBox2 = new BoundingBox(new Place(mid, box.Min.Long), box.Max);
-					this.Explore(childBox1, bandSize, maxsize, minsize);
-					this.Explore(childBox2, bandSize, maxsize, minsize);
+					this.Explore(childBox1);
+					this.Explore(childBox2);
 				} else {
 					mid = (box.Min.Long + box.Max.Long) / 2;
 					//mid = 0.3*box.Min.Long + 0.7*box.Max.Long;
 					childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid));
 					childBox2 = new BoundingBox(new Place(box.Min.Lat, mid), box.Max);
-					this.Explore(childBox1, bandSize, maxsize, minsize);
-					this.Explore(childBox2, bandSize, maxsize, minsize);
+					this.Explore(childBox1);
+					this.Explore(childBox2);
 				}
 			}
 		}

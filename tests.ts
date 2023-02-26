@@ -38,7 +38,7 @@ class Tests {
 	}
 	public static testExplore() {
 		console.log("testExplore() start");
-		var paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 8);
+		var paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 7);
 		var berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 8);
 		var barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 1);
 		var zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 1);
@@ -54,8 +54,8 @@ class Tests {
 		var boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
 		console.log("explore() start");
-		var explorer: Explorer = new Explorer(dSet);
-		explorer.Explore(box, 200, boxSize/10, boxSize/120);
+		var explorer: Explorer = new Explorer(dSet, 200, boxSize/10, boxSize/120);
+		explorer.Explore(box);
 
 		console.log("explore() end");
 
