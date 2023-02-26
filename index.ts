@@ -56,8 +56,8 @@ function AddMarker(dest: Destination) {
 
 	new google.maps.Marker({
 		position: newlatLng,
+		label: "" + dest.Wheight + "",
 		map,
-		title: "W:" + dest.Wheight,
 	});
 
 	LatLngList.push(newlatLng);
@@ -107,10 +107,10 @@ class DestinationSet {
 	constructor(destinations: Destination[]) {
 		this.Destinations = destinations;
 	}
-	ComputeCostFrom(origin: Place, fn: (a: Place, b: Place) => number) {
+	ComputeCostFrom(origin: Place, calc: CostCalculator) {
 		let totalCost: number = 0;
 		for (let destination of this.Destinations) {
-			var cost = destination.Wheight * fn(origin, destination.Place);
+			var cost = destination.Wheight * calc.GetCost(origin, destination.Place);
 			totalCost += cost;
 		}
 		return totalCost;
@@ -319,18 +319,18 @@ class Explorer {
 		var p3: Place = box.NE;
 		var p4: Place = box.SE;
 		var p5: Place = box.Center;
-		var c1: number = this.DestSet.ComputeCostFrom(p1, this.CostCalculator.GetCost);
-		var c2: number = this.DestSet.ComputeCostFrom(p2, this.CostCalculator.GetCost);
-		var c3: number = this.DestSet.ComputeCostFrom(p3, this.CostCalculator.GetCost);
-		var c4: number = this.DestSet.ComputeCostFrom(p4, this.CostCalculator.GetCost);
-		var c5: number = this.DestSet.ComputeCostFrom(p5, this.CostCalculator.GetCost);
+		var c1: number = this.DestSet.ComputeCostFrom(p1, this.CostCalculator);
+		var c2: number = this.DestSet.ComputeCostFrom(p2, this.CostCalculator);
+		var c3: number = this.DestSet.ComputeCostFrom(p3, this.CostCalculator);
+		var c4: number = this.DestSet.ComputeCostFrom(p4, this.CostCalculator);
+		var c5: number = this.DestSet.ComputeCostFrom(p5, this.CostCalculator);
 		var dLat: number = box.Max.Lat - box.Min.Lat;
 		var dLon: number = box.Max.Long - box.Min.Long;
 
 		if (dLat < maxsize && dLon < maxsize && AllEqual(QuantitizeCost(c1, bandSize), QuantitizeCost(c2, bandSize), QuantitizeCost(c3, bandSize), QuantitizeCost(c4, bandSize), QuantitizeCost(c5, bandSize))) {
 			// see: https://developers.google.com/maps/documentation/javascript/reference/visualization
 			// TODO: Paint map with translucid color based on cost.
-			DrawRectangle(box, (c1 + c2 + c3 + c4) / 4);
+			//DrawRectangle(box, (c1 + c2 + c3 + c4) / 4);
 		} else {
 
 			if (dLat < minsize && dLon < minsize) {
@@ -362,69 +362,3 @@ class Explorer {
 		}
 	}
 }
-
-// TESTS:
-console.log("Tests:");
-
-
-function testTotalCost() {
-
-
-	var places: Place[] = [new Place(1,0), new Place(0,1), new Place(-1,0), new Place(0,-1)];
-	var destinations: Destination[] = [new Destination(places[0], 1), new Destination(places[1], 2), new Destination(places[2], 3), new Destination(places[3], 4)];
-	var dSet: DestinationSet= new DestinationSet(destinations);
-	var tCost: number = dSet.ComputeCostFromEuclidean(new Place(0,0));
-	if (tCost == 10) {
-		console.log("10 is OK");
-	} else {
-		console.log("Total cost is: " + tCost + "\n Expected 10.");
-	}
-}
-function testRealPlaces() {
-	var barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 1);
-	var paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 6);
-	var berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 2);
-	var zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 4);
-	var dSet: DestinationSet = new DestinationSet([barcelona, paris, berlin, zurich]);
-	var origin: Place = new Place(46.8730811, 3.2886396);
-	var costCalc: CostCalculator = new HaversineDistance();
-	var tCost: number = dSet.ComputeCostFrom(origin, costCalc.GetCost);
-	console.log("Total cost: " + tCost + "Km");
-	var centroid: Place = dSet.GetWheightedCentroid();
-	console.log(centroid);
-	var tCost2: number = dSet.ComputeCostFrom(centroid, costCalc.GetCost);
-	console.log("Total cost: " + tCost2 + "Km");
-
-}
-function testExplore() {
-	console.log("testExplore() start");
-	var paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 8);
-	var berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 8);
-	var barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 1);
-	var zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 1);
-	var dSet: DestinationSet = new DestinationSet([barcelona, paris, berlin, zurich]);
-	
-	//var box: BoundingBox = dSet.GetBoundingBox();
-	var box: BoundingBox = new BoundingBox(paris.Place);
-	box.Expand(zurich.Place);
-	box.ExpandBy(80);
-	box.ExpandLatBy(230);
-	box.ExpandLongBy(40);
-
-	var boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-
-	console.log("explore() start");
-	var explorer: Explorer = new Explorer(dSet);
-	explorer.Explore(box, 200, boxSize/10, boxSize/120);
-
-	console.log("explore() end");
-
-	AddMarker(barcelona);
-	AddMarker(paris);
-	AddMarker(berlin);
-	AddMarker(zurich);
-	console.log("testExplore() end");
-}
-testTotalCost();
-testRealPlaces();
-//testExplore();
