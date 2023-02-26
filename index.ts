@@ -28,6 +28,8 @@ const formLat = document.getElementById("lat") as HTMLInputElement;
 const formLong = document.getElementById("long") as HTMLInputElement;
 const logTag = document.getElementById("log") as HTMLElement;
 
+
+
 form.onsubmit = () => {
 
 	const formData = new FormData(form);
@@ -67,6 +69,10 @@ function AddMarker(dest: Destination) {
 
 	map.setCenter(latlngbounds.getCenter());
 	map.fitBounds(latlngbounds); 
+}
+
+function DegToRad(degrees: number) {
+	return degrees * (Math.PI / 180);
 }
 
 class Place {
@@ -109,13 +115,6 @@ class DestinationSet {
 		}
 		return totalCost;
 	}
-	ComputeCostFromEuclidean(origin: Place) {
-		return this.ComputeCostFrom(origin, (a, b) => {
-			var dLat: number = a.Lat - b.Lat;
-			var dLong: number = a.Long - b.Long;
-			return Math.sqrt((dLat * dLat) + (dLong * dLong));
-		});
-	}
 	GetBoundingBox() {
 		if (this.Destinations.length == 0)
 			return null;
@@ -143,11 +142,13 @@ class DestinationSet {
 class BoundingBox {
 	Min: Place;
 	Max: Place;
-	get SW() {return new Place(this.Min.Lat, this.Min.Long);}
-	get NW() {return new Place(this.Max.Lat, this.Min.Long);}
-	get NE() {return new Place(this.Max.Lat, this.Max.Long);}
-	get SE() {return new Place(this.Min.Lat, this.Max.Long);}
-	get Center() {return new Place((this.Min.Lat + this.Max.Lat)/2,(this.Min.Long + this.Max.Long)/2)}
+	get SW() {return new Place(this.Min.Lat, this.Min.Long); }
+	get NW() {return new Place(this.Max.Lat, this.Min.Long); }
+	get NE() {return new Place(this.Max.Lat, this.Max.Long); }
+	get SE() {return new Place(this.Min.Lat, this.Max.Long); }
+	get Center() {return new Place((this.Min.Lat + this.Max.Lat)/2,(this.Min.Long + this.Max.Long)/2); }
+	get SizeLat() { return this.Max.Lat - this.Min.Lat; }
+	get SizeLong() { return this.Max.Long - this.Min.Long; }
 
 	constructor(place: Place, max?: Place) {
 		this.Min = new Place(place.Lat, place.Long);
@@ -174,6 +175,12 @@ class BoundingBox {
 		this.Min.Long = this.Min.Long - (longInc / 2);
 		this.Max.Long = this.Max.Long + (longInc / 2);
 	}
+	ExpandByDeg(deg: number) {
+		this.Min.Lat -= deg;
+		this.Max.Lat += deg;
+		this.Min.Long -= deg;
+		this.Max.Long += deg;
+	}
 	ExpandLatBy(percent: number) {
 		var perOne: number = percent / 100;
 		var dLat: number = this.Max.Lat - this.Min.Lat;
@@ -190,30 +197,6 @@ class BoundingBox {
 	}
 }
 
-/*
- *	https://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
- *	http://www.movable-type.co.uk/scripts/latlong.html
-*/
-function degToRad(degrees: number) {
-	return degrees * (Math.PI / 180);
-}
-
-function earthCoordinateDistanceKm(p1: Place, p2: Place) {
-	var earthRadiusKm = 6371;
-
-	var dLat = degToRad(p2.Lat - p1.Lat);
-	var dLon = degToRad(p2.Long - p1.Long);
-
-	var lat1 = degToRad(p1.Lat);
-	var lat2 = degToRad(p2.Lat);
-
-	var sdLat = Math.sin(dLat / 2);
-	var sdLon = Math.sin(dLon / 2);
-
-	var a = sdLat * sdLat + sdLon * sdLon * Math.cos(lat1) * Math.cos(lat2); 
-	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-	return earthRadiusKm * c;
-}
 
 function DrawRectangle(box: BoundingBox, cost: number) {
 	var north: number = box.Max.Lat;
@@ -315,53 +298,67 @@ function AllEqual(v1: number, v2: number, v3: number, v4: number, v5: number) {
 	return v1 == v2 && v2 == v3 && v3 == v4 && v4 == v5;
 }
 
-function explore(dSet: DestinationSet, box: BoundingBox, bandSize: number, maxsize: number, minsize: number) {
-	// console.log("inside of explore();");
-	// console.log(box);
-	var p1: Place = box.SW;
-	var p2: Place = box.NW;
-	var p3: Place = box.NE;
-	var p4: Place = box.SE;
-	var p5: Place = box.Center;
-	var c1: number = dSet.ComputeCostFrom(p1, earthCoordinateDistanceKm);
-	var c2: number = dSet.ComputeCostFrom(p2, earthCoordinateDistanceKm);
-	var c3: number = dSet.ComputeCostFrom(p3, earthCoordinateDistanceKm);
-	var c4: number = dSet.ComputeCostFrom(p4, earthCoordinateDistanceKm);
-	var c5: number = dSet.ComputeCostFrom(p5, earthCoordinateDistanceKm);
-	var dLat: number = box.Max.Lat - box.Min.Lat;
-	var dLon: number = box.Max.Long - box.Min.Long;
-
-	if (dLat < maxsize && dLon < maxsize && AllEqual(QuantitizeCost(c1, bandSize), QuantitizeCost(c2, bandSize), QuantitizeCost(c3, bandSize), QuantitizeCost(c4, bandSize), QuantitizeCost(c5, bandSize))) {
-		// see: https://developers.google.com/maps/documentation/javascript/reference/visualization
-		// TODO: Paint map with translucid color based on cost.
-		//DrawRectangle(box, (c1 + c2 + c3 + c4) / 4);
-	} else {
-
-		if (dLat < minsize && dLon < minsize) {
-			// console.log("Line");
-			// console.log(box);
-			//DrawDarkRectangle(box);
-			FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, bandSize);
-			// TODO: Paint "line" color.
+class Explorer {
+	DestSet: DestinationSet;
+	CostCalculator: CostCalculator;
+	constructor(dSet: DestinationSet, costCalc?: CostCalculator) {
+		this.DestSet = dSet;
+		if (costCalc == null) {
+			//TODO: choose a cheaper default calculator
+			this.CostCalculator = new HaversineDistance();
 		} else {
-			var mid: number;
-			var childBox1: BoundingBox;
-			var childBox2: BoundingBox;
-			if (dLat > dLon) {
-				//mid = (box.Min.Lat + box.Max.Lat) / 2;
-				mid = 0.3*box.Min.Lat + 0.7*box.Max.Lat;
-				childBox1 = new BoundingBox(box.Min, new Place(mid, box.Max.Long));
-				childBox2 = new BoundingBox(new Place(mid, box.Min.Long), box.Max);
-				explore(dSet, childBox1, bandSize, maxsize, minsize);
-				explore(dSet, childBox2, bandSize, maxsize, minsize);
+			this.CostCalculator = costCalc;
+		}
+	}
+
+	Explore(box: BoundingBox, bandSize: number, maxsize: number, minsize: number) {
+		// console.log("inside of explore();");
+		// console.log(box);
+		var p1: Place = box.SW;
+		var p2: Place = box.NW;
+		var p3: Place = box.NE;
+		var p4: Place = box.SE;
+		var p5: Place = box.Center;
+		var c1: number = this.DestSet.ComputeCostFrom(p1, this.CostCalculator.GetCost);
+		var c2: number = this.DestSet.ComputeCostFrom(p2, this.CostCalculator.GetCost);
+		var c3: number = this.DestSet.ComputeCostFrom(p3, this.CostCalculator.GetCost);
+		var c4: number = this.DestSet.ComputeCostFrom(p4, this.CostCalculator.GetCost);
+		var c5: number = this.DestSet.ComputeCostFrom(p5, this.CostCalculator.GetCost);
+		var dLat: number = box.Max.Lat - box.Min.Lat;
+		var dLon: number = box.Max.Long - box.Min.Long;
+
+		if (dLat < maxsize && dLon < maxsize && AllEqual(QuantitizeCost(c1, bandSize), QuantitizeCost(c2, bandSize), QuantitizeCost(c3, bandSize), QuantitizeCost(c4, bandSize), QuantitizeCost(c5, bandSize))) {
+			// see: https://developers.google.com/maps/documentation/javascript/reference/visualization
+			// TODO: Paint map with translucid color based on cost.
+			DrawRectangle(box, (c1 + c2 + c3 + c4) / 4);
+		} else {
+
+			if (dLat < minsize && dLon < minsize) {
+				// console.log("Line");
+				// console.log(box);
+				//DrawDarkRectangle(box);
+				FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, bandSize);
+				// TODO: Paint "line" color.
 			} else {
-				//mid = (box.Min.Long + box.Max.Long) / 2;
-				mid = 0.3*box.Min.Long + 0.7*box.Max.Long;
-				childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid));
-				childBox2 = new BoundingBox(new Place(box.Min.Lat, mid), box.Max);
-				explore(dSet, childBox1, bandSize, maxsize, minsize);
-				explore(dSet, childBox2, bandSize, maxsize, minsize);
-			}			
+				var mid: number;
+				var childBox1: BoundingBox;
+				var childBox2: BoundingBox;
+				if (dLat > dLon) {
+					mid = (box.Min.Lat + box.Max.Lat) / 2;
+					//mid = 0.3*box.Min.Lat + 0.7*box.Max.Lat;
+					childBox1 = new BoundingBox(box.Min, new Place(mid, box.Max.Long));
+					childBox2 = new BoundingBox(new Place(mid, box.Min.Long), box.Max);
+					this.Explore(childBox1, bandSize, maxsize, minsize);
+					this.Explore(childBox2, bandSize, maxsize, minsize);
+				} else {
+					mid = (box.Min.Long + box.Max.Long) / 2;
+					//mid = 0.3*box.Min.Long + 0.7*box.Max.Long;
+					childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid));
+					childBox2 = new BoundingBox(new Place(box.Min.Lat, mid), box.Max);
+					this.Explore(childBox1, bandSize, maxsize, minsize);
+					this.Explore(childBox2, bandSize, maxsize, minsize);
+				}
+			}
 		}
 	}
 }
@@ -390,11 +387,12 @@ function testRealPlaces() {
 	var zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 4);
 	var dSet: DestinationSet = new DestinationSet([barcelona, paris, berlin, zurich]);
 	var origin: Place = new Place(46.8730811, 3.2886396);
-	var tCost: number = dSet.ComputeCostFrom(origin, earthCoordinateDistanceKm);
+	var costCalc: CostCalculator = new HaversineDistance();
+	var tCost: number = dSet.ComputeCostFrom(origin, costCalc.GetCost);
 	console.log("Total cost: " + tCost + "Km");
 	var centroid: Place = dSet.GetWheightedCentroid();
 	console.log(centroid);
-	var tCost2: number = dSet.ComputeCostFrom(centroid, earthCoordinateDistanceKm);
+	var tCost2: number = dSet.ComputeCostFrom(centroid, costCalc.GetCost);
 	console.log("Total cost: " + tCost2 + "Km");
 
 }
@@ -412,9 +410,12 @@ function testExplore() {
 	box.ExpandBy(80);
 	box.ExpandLatBy(230);
 	box.ExpandLongBy(40);
-	console.log("explore() start");
 
-	explore(dSet, box, 200, 1, 0.3);
+	var boxSize: number = Math.min(box.SizeLat, box.SizeLong);
+
+	console.log("explore() start");
+	var explorer: Explorer = new Explorer(dSet);
+	explorer.Explore(box, 200, boxSize/10, boxSize/120);
 
 	console.log("explore() end");
 
