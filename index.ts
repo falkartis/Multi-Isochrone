@@ -289,11 +289,6 @@ function FindAndDrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place
 	}
 }
 
-function QuantitizeCost(v: number, step: number) {
-	// ceil or floor, that is the question
-	return step * Math.ceil(v / step);
-}
-
 function AllEqual(v1: number, v2: number, v3: number, v4: number, v5: number) {
 	return v1 == v2 && v2 == v3 && v3 == v4 && v4 == v5;
 }
