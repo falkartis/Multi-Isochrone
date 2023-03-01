@@ -3,7 +3,6 @@
   "description": "",
   "version": "0.1.0",
   "main": "index.js",
-
   "repository": {
     "type": "git",
     "url": "git+https://github.com/falkartis/Multi-Isochrone.git"
@@ -16,8 +15,5 @@
   "homepage": "https://github.com/falkartis/Multi-Isochrone#readme",
   "dependencies": {
     "@types/google.maps": "^3.52.0"
-  },
-  "devDependencies": {
-    "typescript": "^4.9.5"
   }
 }
