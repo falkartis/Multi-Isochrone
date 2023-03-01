@@ -1,3 +1,5 @@
+import { Tests } from "./tests/index.test";
+
 let map: google.maps.Map;
 
 let LatLngList: google.maps.LatLng[] = [];
@@ -250,8 +252,7 @@ function Interpolate(p1: Place, p2: Place, v1: number, v2: number) {
 	return p1.Lerp(t, p2);
 }
 
-function FindAndDrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place, c3: number, p4: Place, c4: number, bandSize: number) {
-	var qMin: number = QuantitizeCost(Math.min(c1, c2, c3, c4), bandSize);
+function FindAndDrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place, c3: number, p4: Place, c4: number, qMin: number) {
 	var v1: number = c1 - qMin;
 	var v2: number = c2 - qMin;
 	var v3: number = c3 - qMin;
@@ -262,8 +263,8 @@ function FindAndDrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place
 	index += 4 * (+(v3 > 0));
 	index += 8 * (+(v4 > 0));
 
-	var l1: Place;
-	var l2: Place;
+	var l1: Place|null = null;
+	var l2: Place|null = null;
 	switch (index) {
 		// CORNERS:
 		case 1:		case 14:	l1 = Interpolate(p1, p2, v1, v2);	l2 = Interpolate(p1, p4, v1, v4);	break;
@@ -296,10 +297,11 @@ function AllEqual(v1: number, v2: number, v3: number, v4: number, v5: number) {
 class Explorer {
 	DestSet: DestinationSet;
 	CostCalculator: CostCalculator;
+	Discretizer: Discretizer;
 	BandSize: number;
 	MaxSize: number;
 	MinSize: number;
-	constructor(dSet: DestinationSet, bandSize: number, maxsize: number, minsize: number, costCalc?: CostCalculator) {
+	constructor(dSet: DestinationSet, bandSize: number, maxsize: number, minsize: number, costCalc?: CostCalculator, disc?: Discretizer) {
 		this.DestSet = dSet;
 		this.BandSize = bandSize;
 		this.MaxSize = maxsize;
@@ -309,6 +311,11 @@ class Explorer {
 			this.CostCalculator = new HaversineDistance();
 		} else {
 			this.CostCalculator = costCalc;
+		}
+		if (disc == null) {
+			this.Discretizer = new LinearDiscretizer(bandSize);
+		} else {
+			this.Discretizer = disc;
 		}
 	}
 
@@ -328,17 +335,20 @@ class Explorer {
 		var dLat: number = box.Max.Lat - box.Min.Lat;
 		var dLon: number = box.Max.Long - box.Min.Long;
 
-		if (dLat < this.MaxSize && dLon < this.MaxSize && AllEqual(QuantitizeCost(c1, this.BandSize), QuantitizeCost(c2, this.BandSize), QuantitizeCost(c3, this.BandSize), QuantitizeCost(c4, this.BandSize), QuantitizeCost(c5, this.BandSize))) {
+		if (dLat < this.MaxSize && dLon < this.MaxSize && AllEqual(this.Discretizer.Discretize(c1), this.Discretizer.Discretize(c2), this.Discretizer.Discretize(c3), this.Discretizer.Discretize(c4), this.Discretizer.Discretize(c5))) {
 			// see: https://developers.google.com/maps/documentation/javascript/reference/visualization
 			// TODO: Paint map with translucid color based on cost.
 			//DrawRectangle(box, (c1 + c2 + c3 + c4) / 4);
 		} else {
 
 			if (dLat < this.MinSize && dLon < this.MinSize) {
+
+				var qMin: number = this.Discretizer.Discretize(Math.min(c1, c2, c3, c4));
+
 				// console.log("Line");
 				// console.log(box);
 				//DrawDarkRectangle(box);
-				FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, this.BandSize);
+				FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, qMin);
 				// TODO: Paint "line" color.
 			} else {
 				var mid: number;

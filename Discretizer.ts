@@ -19,3 +19,33 @@ class LinearDiscretizer implements Discretizer {
 		return this.Step * Math.ceil((v - this.Offset) / this.Step) + this.Offset;
 	}
 }
+
+class LnDiscretizer implements Discretizer {
+
+	Linear: LinearDiscretizer;
+	constructor(step: number, offset?: number) {
+		this.Linear = new LinearDiscretizer(step, offset);
+	}
+
+	Discretize(v: number) {
+		return Math.exp(this.Linear.Discretize(Math.log(v)));
+	}
+}
+
+class LogDiscretizer implements Discretizer {
+
+	Base: number;
+	Linear: LinearDiscretizer;
+	constructor(base: number, step: number, offset?: number) {
+		this.Base = base;
+		this.Linear = new LinearDiscretizer(step, offset);
+	}
+
+	LogBase(x:number, y:number) {
+		return Math.log(y) / Math.log(x);
+	}
+
+	Discretize(v: number) {
+		return Math.pow(this.Base, this.Linear.Discretize(this.LogBase(this.Base, v)));
+	}
+}

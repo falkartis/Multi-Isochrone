@@ -7,7 +7,7 @@
 // });
 
 // TESTS:
-class Tests {
+export class Tests {
 
 	public static testTotalCost() {
 		var places: Place[] = [new Place(1,0), new Place(0,1), new Place(-1,0), new Place(0,-1)];
@@ -61,7 +61,8 @@ class Tests {
 		var boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
 		console.log("explore() start");
-		var explorer: Explorer = new Explorer(dSet, 200, boxSize/10, boxSize/120);
+		var disc = new LnDiscretizer(200, 0);
+		var explorer: Explorer = new Explorer(dSet, 200, boxSize/10, boxSize/120, undefined, disc);
 		explorer.Explore(box);
 
 		console.log("explore() end");
