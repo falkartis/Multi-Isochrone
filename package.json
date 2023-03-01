@@ -1,19 +1,19 @@
 {
-  "name": "multi-isochrone",
-  "description": "",
-  "version": "0.1.0",
-  "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/falkartis/Multi-Isochrone.git"
-  },
-  "author": "Falk Artis Bay",
-  "license": "GPL-3.0",
-  "bugs": {
-    "url": "https://github.com/falkartis/Multi-Isochrone/issues"
-  },
-  "homepage": "https://github.com/falkartis/Multi-Isochrone#readme",
-  "dependencies": {
-    "@types/google.maps": "^3.52.0"
-  }
+	"name": "multi-isochrone",
+	"description": "",
+	"version": "0.1.0",
+	"main": "index.js",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/falkartis/Multi-Isochrone.git"
+	},
+	"author": "Falk Artis Bay",
+	"license": "GPL-3.0",
+	"bugs": {
+		"url": "https://github.com/falkartis/Multi-Isochrone/issues"
+	},
+	"homepage": "https://github.com/falkartis/Multi-Isochrone#readme",
+	"dependencies": {
+		"@types/google.maps": "^3.52.0"
+	}
 }
