@@ -21,12 +21,12 @@ export class EuclideanDistance implements CostCalculator {
 	}
 }
 
-class LatCorrectedEuclideanDistance implements CostCalculator {
+export class LatCorrectedEuclideanDistance implements CostCalculator {
 	LatScale: number;
 	LongScale: number;
 	constructor(lat: number, planetRadius?: number) {
 		if (planetRadius == null) {
-			planetRadius = 6371;
+			planetRadius = 6371; // Earth's radius
 		}
 		this.LatScale = planetRadius * DegToRad(1);
 		this.LongScale = planetRadius * DegToRad(1) * Math.cos(DegToRad(lat));

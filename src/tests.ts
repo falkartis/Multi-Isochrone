@@ -1,6 +1,6 @@
 import { AddMarker, Explorer, BoundingBox, DestinationSet, Place, Destination } from './index.js';
-import { CostCalculator, EuclideanDistance, HaversineDistance } from './CostCalculator.js'
-import { LinearDiscretizer, LnDiscretizer } from './Discretizer.js'
+import { CostCalculator, EuclideanDistance, HaversineDistance, LatCorrectedEuclideanDistance } from './CostCalculator.js'
+import { LinearDiscretizer, LnDiscretizer, LogDiscretizer } from './Discretizer.js'
 export { initMap } from './index.js';
 
 // TESTS:
@@ -43,9 +43,9 @@ export class Tests {
 	public static testExplore() {
 		console.log("testExplore() start");
 		var paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 7);
-		var berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 8);
-		var barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 1);
-		var zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 1);
+		var berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 7);
+		var barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 2);
+		var zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 3);
 		var dSet: DestinationSet = new DestinationSet([barcelona, paris, berlin, zurich]);
 		
 		//var box: BoundingBox = dSet.GetBoundingBox();
@@ -57,10 +57,19 @@ export class Tests {
 
 		var boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
+		var centroid: Destination = new Destination(dSet.GetWheightedCentroid(), 0);
+
+		var costCalc: CostCalculator = new HaversineDistance();
+		//var costCalc: CostCalculator = new LatCorrectedEuclideanDistance(centroid.Place.Lat);
+		var centroidCost: number = dSet.ComputeCostFrom(centroid.Place, costCalc);
+		AddMarker(centroid);
+		console.log({centroidCost});
+
 		console.log("explore() start");
-		//var disc = new LnDiscretizer(200, 0);
-		var disc = new LinearDiscretizer(200, 0);
-		var explorer: Explorer = new Explorer(dSet, 200, boxSize/10, boxSize/120, undefined, disc);
+		//var disc = new LogDiscretizer(2, 0.5, centroidCost * 0.995);
+		var disc = new LnDiscretizer(0.5, centroidCost * 0.988);
+		//var disc = new LinearDiscretizer(200, 0);
+		var explorer: Explorer = new Explorer(dSet, 200, boxSize/10, boxSize/120, costCalc, disc);
 		explorer.Explore(box);
 
 		console.log("explore() end");
