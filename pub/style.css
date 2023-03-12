@@ -20,10 +20,13 @@ input {
 	width: 40px;
 }
 #sideBar {
-	display: none;
+/*	display: none;*/
 	float: left;
 	width: 10%;
 	height: 100%;
+}
+#sideBar form {
+	display: none;
 }
 #log {
 	max-height: 50%;

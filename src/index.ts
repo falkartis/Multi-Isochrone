@@ -1,78 +1,9 @@
 import { CostCalculator, EuclideanDistance, HaversineDistance } from './CostCalculator.js'
 import { Discretizer, LinearDiscretizer } from './Discretizer.js'
-
-let map: google.maps.Map;
-
-let LatLngList: google.maps.LatLng[] = [];
-
-export function initMap(): void {
-
-	const myLatLng = { lat: 0, lng: 0 };
-	map = new google.maps.Map(
-		document.getElementById("map") as HTMLElement,
-		{
-			zoom: 2,
-			center: { lat: 0, lng: 0 },
-		}
-	);
-}
-
-declare global {
-	interface Window {
-		initMap: () => void;
-	}
-}
-window.initMap = initMap;
-
-
-const form = document.getElementById("markerForm") as HTMLFormElement;
-const formWheight = document.getElementById("wheight") as HTMLInputElement;
-const formLat = document.getElementById("lat") as HTMLInputElement;
-const formLong = document.getElementById("long") as HTMLInputElement;
-const logTag = document.getElementById("log") as HTMLElement;
+import { MapConnector, ConsoleLogConnector } from './MapConnector.js'
 
 
 
-form.onsubmit = () => {
-
-	const formData = new FormData(form);
-	console.log(formData);
-
-	var p = document.createElement('p');
-
-	var w: number = +formWheight.value;
-	var lat: number = +formLat.value;
-	var lng: number = +formLong.value;
-	p.innerHTML = "W:" + w + ", lat:" + lat + ", long:" + lng;
-	logTag.appendChild(p);
-
-	var pl: Place = new Place(lat, lng);
-	var dst: Destination = new Destination(pl, w);
-	AddMarker(dst);
-
-	return false; // prevent reload
-};
-
-export function AddMarker(dest: Destination) {
-
-	var newlatLng: google.maps.LatLng = new google.maps.LatLng(dest.Place.Lat, dest.Place.Long);
-
-	new google.maps.Marker({
-		position: newlatLng,
-		label: "" + dest.Wheight + "",
-		map,
-	});
-
-	LatLngList.push(newlatLng);
-
-	var latlngbounds: google.maps.LatLngBounds = new google.maps.LatLngBounds();
-
-	for(var latLng of LatLngList)
-		latlngbounds.extend(latLng);
-
-	map.setCenter(latlngbounds.getCenter());
-	map.fitBounds(latlngbounds); 
-}
 
 export function DegToRad(degrees: number) {
 	return degrees * (Math.PI / 180);
@@ -201,51 +132,7 @@ export class BoundingBox {
 }
 
 
-function DrawRectangle(box: BoundingBox, cost: number) {
-	var north: number = box.Max.Lat;
-	var south: number = box.Min.Lat;
-	var east: number = box.Max.Long;
-	var west: number = box.Min.Long;
 
-	const rectangle = new google.maps.Rectangle({
-		strokeColor: "#FF0000",
-		strokeOpacity: 0.35,
-		strokeWeight: 1,
-		fillColor: "#FF0000",
-		fillOpacity: 0.3,
-		map,
-		bounds: {north, south, east, west},
-	});
-}
-function DrawDarkRectangle(box: BoundingBox) {
-	var north: number = box.Max.Lat;
-	var south: number = box.Min.Lat;
-	var east: number = box.Max.Long;
-	var west: number = box.Min.Long;
-
-	const rectangle = new google.maps.Rectangle({
-		strokeColor: "#211",
-		strokeOpacity: 0.35,
-		strokeWeight: 1,
-		fillColor: "#211",
-		fillOpacity: 0.3,
-		map,
-		bounds: {north, south, east, west},
-	});
-}
-
-function DrawLine(p1: Place, p2: Place) {
-	const lineCoords = [{ lat: p1.Lat, lng: p1.Long }, { lat: p2.Lat, lng: p2.Long } ];
-	const line = new google.maps.Polyline({
-		path: lineCoords,
-		geodesic: false, // does it go faster when set to false?, does it look more precise when set to true?
-		strokeColor: "#211",
-		strokeOpacity: 0.6,
-		strokeWeight: 1,
-	});
-
-	line.setMap(map);
-}
 
 
 function Interpolate(p1: Place, p2: Place, v1: number, v2: number) {
@@ -253,47 +140,6 @@ function Interpolate(p1: Place, p2: Place, v1: number, v2: number) {
 	return p1.Lerp(t, p2);
 }
 
-function FindAndDrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place, c3: number, p4: Place, c4: number, qMin: number) {
-	var v1: number = c1 - qMin;
-	var v2: number = c2 - qMin;
-	var v3: number = c3 - qMin;
-	var v4: number = c4 - qMin;
-	var index: number = 0;
-	index += 1 * (+(v1 > 0));
-	index += 2 * (+(v2 > 0));
-	index += 4 * (+(v3 > 0));
-	index += 8 * (+(v4 > 0));
-
-	var l1: Place|null = null;
-	var l2: Place|null = null;
-	switch (index) {
-		// CORNERS:
-		case 1:		case 14:	l1 = Interpolate(p1, p2, v1, v2);	l2 = Interpolate(p1, p4, v1, v4);	break;
-		case 2:		case 13:	l1 = Interpolate(p2, p1, v2, v1);	l2 = Interpolate(p2, p3, v2, v3);	break;
-		case 4:		case 11:	l1 = Interpolate(p3, p2, v3, v2);	l2 = Interpolate(p3, p4, v3, v4);	break;
-		case 7:		case 8:		l1 = Interpolate(p4, p1, v4, v1);	l2 = Interpolate(p4, p3, v4, v3);	break;
-		// LINE THROUGH:
-		case 6:		case 9:		l1 = Interpolate(p1, p2, v1, v2);	l2 = Interpolate(p3, p4, v3, v4);	break;
-		case 3:		case 12:	l1 = Interpolate(p1, p4, v1, v4);	l2 = Interpolate(p2, p3, v2, v3);	break;
-		// SADDLE POINT (not expected here):
-		case 5:
-		case 10:
-		// ALL EQUAL, SOLID COLOR, (Case handled somewhere else):
-		case 0:
-		case 15:
-			console.log("Why am I here?");
-			break;
-	}
-	if (l1 == null || l2 == null) {
-		console.log({v1, v2, v3, v4, qMin, index});
-	} else {
-		DrawLine(l1, l2);
-	}
-}
-
-function AllEqual(v1: number, v2: number, v3: number, v4: number, v5: number) {
-	return v1 == v2 && v2 == v3 && v3 == v4 && v4 == v5;
-}
 
 export class Explorer {
 	DestSet: DestinationSet;
@@ -302,7 +148,9 @@ export class Explorer {
 	BandSize: number;
 	MaxSize: number;
 	MinSize: number;
-	constructor(dSet: DestinationSet, bandSize: number, maxsize: number, minsize: number, costCalc?: CostCalculator, disc?: Discretizer) {
+	Map: MapConnector;
+
+	constructor(dSet: DestinationSet, bandSize: number, maxsize: number, minsize: number, costCalc?: CostCalculator, disc?: Discretizer, map?: MapConnector) {
 		this.DestSet = dSet;
 		this.BandSize = bandSize;
 		this.MaxSize = maxsize;
@@ -318,6 +166,54 @@ export class Explorer {
 		} else {
 			this.Discretizer = disc;
 		}
+		if (map == null) {
+			//TODO: Some default implementation? (a logger maybe)
+			this.Map = new ConsoleLogConnector();
+		} else {
+			this.Map = map;
+		}
+	}
+
+	FindAndDrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place, c3: number, p4: Place, c4: number, qMin: number) {
+		var v1: number = c1 - qMin;
+		var v2: number = c2 - qMin;
+		var v3: number = c3 - qMin;
+		var v4: number = c4 - qMin;
+		var index: number = 0;
+		index += 1 * (+(v1 > 0));
+		index += 2 * (+(v2 > 0));
+		index += 4 * (+(v3 > 0));
+		index += 8 * (+(v4 > 0));
+
+		var l1: Place|null = null;
+		var l2: Place|null = null;
+		switch (index) {
+			// CORNERS:
+			case 1:		case 14:	l1 = Interpolate(p1, p2, v1, v2);	l2 = Interpolate(p1, p4, v1, v4);	break;
+			case 2:		case 13:	l1 = Interpolate(p2, p1, v2, v1);	l2 = Interpolate(p2, p3, v2, v3);	break;
+			case 4:		case 11:	l1 = Interpolate(p3, p2, v3, v2);	l2 = Interpolate(p3, p4, v3, v4);	break;
+			case 7:		case 8:		l1 = Interpolate(p4, p1, v4, v1);	l2 = Interpolate(p4, p3, v4, v3);	break;
+			// LINE THROUGH:
+			case 6:		case 9:		l1 = Interpolate(p1, p2, v1, v2);	l2 = Interpolate(p3, p4, v3, v4);	break;
+			case 3:		case 12:	l1 = Interpolate(p1, p4, v1, v4);	l2 = Interpolate(p2, p3, v2, v3);	break;
+			// SADDLE POINT (not expected here):
+			case 5:
+			case 10:
+			// ALL EQUAL, SOLID COLOR, (Case handled somewhere else):
+			case 0:
+			case 15:
+				console.log("Why am I here?");
+				break;
+		}
+		if (l1 == null || l2 == null) {
+			console.log({v1, v2, v3, v4, qMin, index});
+		} else {
+			this.Map.AddLine(l1, l2);
+		}
+	}
+
+	AllEqual(v1: number, v2: number, v3: number, v4: number, v5: number) {
+		return v1 == v2 && v2 == v3 && v3 == v4 && v4 == v5;
 	}
 
 	Explore(box: BoundingBox) {
@@ -336,7 +232,7 @@ export class Explorer {
 		var dLat: number = box.Max.Lat - box.Min.Lat;
 		var dLon: number = box.Max.Long - box.Min.Long;
 
-		if (dLat < this.MaxSize && dLon < this.MaxSize && AllEqual(this.Discretizer.Discretize(c1), this.Discretizer.Discretize(c2), this.Discretizer.Discretize(c3), this.Discretizer.Discretize(c4), this.Discretizer.Discretize(c5))) {
+		if (dLat < this.MaxSize && dLon < this.MaxSize && this.AllEqual(this.Discretizer.Discretize(c1), this.Discretizer.Discretize(c2), this.Discretizer.Discretize(c3), this.Discretizer.Discretize(c4), this.Discretizer.Discretize(c5))) {
 			// see: https://developers.google.com/maps/documentation/javascript/reference/visualization
 			// TODO: Paint map with translucid color based on cost.
 			//DrawRectangle(box, (c1 + c2 + c3 + c4) / 4);
@@ -349,7 +245,7 @@ export class Explorer {
 				// console.log("Line");
 				// console.log(box);
 				//DrawDarkRectangle(box);
-				FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, qMin);
+				this.FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, qMin);
 				// TODO: Paint "line" color.
 			} else {
 				var mid: number;

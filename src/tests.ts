@@ -1,7 +1,65 @@
-import { AddMarker, Explorer, BoundingBox, DestinationSet, Place, Destination } from './index.js';
 import { CostCalculator, EuclideanDistance, HaversineDistance, LatCorrectedEuclideanDistance } from './CostCalculator.js'
+import { Explorer, BoundingBox, DestinationSet, Place, Destination } from './index.js';
 import { LinearDiscretizer, LnDiscretizer, LogDiscretizer } from './Discretizer.js'
-export { initMap } from './index.js';
+import { GoogleMapsConnector } from './GoogleMapsConnector.js'
+import { MapConnector } from './MapConnector.js'
+
+
+// TODO: tidy this up
+let map: google.maps.Map;
+
+let mapConn: MapConnector;
+
+export function initMap(): void {
+
+	const myLatLng = { lat: 0, lng: 0 };
+	map = new google.maps.Map(
+		document.getElementById("map") as HTMLElement,
+		{
+			zoom: 2,
+			center: { lat: 0, lng: 0 },
+		}
+	);
+	mapConn = new GoogleMapsConnector(map);
+}
+
+declare global {
+	interface Window {
+		initMap: () => void;
+	}
+}
+window.initMap = initMap;
+
+
+const form = document.getElementById("markerForm") as HTMLFormElement;
+const formWheight = document.getElementById("wheight") as HTMLInputElement;
+const formLat = document.getElementById("lat") as HTMLInputElement;
+const formLong = document.getElementById("long") as HTMLInputElement;
+const logTag = document.getElementById("log") as HTMLElement;
+
+
+
+form.onsubmit = () => {
+
+	const formData = new FormData(form);
+	console.log(formData);
+
+	var p = document.createElement('p');
+
+	var w: number = +formWheight.value;
+	var lat: number = +formLat.value;
+	var lng: number = +formLong.value;
+	p.innerHTML = "W:" + w + ", lat:" + lat + ", long:" + lng;
+	logTag.appendChild(p);
+
+	var pl: Place = new Place(lat, lng);
+	var dst: Destination = new Destination(pl, w);
+	mapConn.AddMarker(dst);
+
+	return false; // prevent reload
+};
+
+// END TODO: tidy this up
 
 // TESTS:
 export class Tests {
@@ -62,22 +120,22 @@ export class Tests {
 		var costCalc: CostCalculator = new HaversineDistance();
 		//var costCalc: CostCalculator = new LatCorrectedEuclideanDistance(centroid.Place.Lat);
 		var centroidCost: number = dSet.ComputeCostFrom(centroid.Place, costCalc);
-		AddMarker(centroid);
+		mapConn.AddMarker(centroid);
 		console.log({centroidCost});
 
 		console.log("explore() start");
 		//var disc = new LogDiscretizer(2, 0.5, centroidCost * 0.995);
 		var disc = new LnDiscretizer(0.5, centroidCost * 0.988);
 		//var disc = new LinearDiscretizer(200, 0);
-		var explorer: Explorer = new Explorer(dSet, 200, boxSize/10, boxSize/120, costCalc, disc);
+		var explorer: Explorer = new Explorer(dSet, 200, boxSize/10, boxSize/120, costCalc, disc, mapConn);
 		explorer.Explore(box);
 
 		console.log("explore() end");
 
-		AddMarker(barcelona);
-		AddMarker(paris);
-		AddMarker(berlin);
-		AddMarker(zurich);
+		mapConn.AddMarker(barcelona);
+		mapConn.AddMarker(paris);
+		mapConn.AddMarker(berlin);
+		mapConn.AddMarker(zurich);
 		console.log("testExplore() end");
 	}
 }
