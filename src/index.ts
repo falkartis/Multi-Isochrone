@@ -173,8 +173,15 @@ export class Explorer {
 			this.Map = map;
 		}
 	}
+	SetMaxSize(v: number) {
+		this.MaxSize = v;
+	}
+	SetMinSize(v: number) {
+		this.MinSize = v;
+	}
 
 	FindAndDrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place, c3: number, p4: Place, c4: number, qMin: number) {
+		// TODO: Paint "line" color.
 		var v1: number = c1 - qMin;
 		var v2: number = c2 - qMin;
 		var v3: number = c3 - qMin;
@@ -217,8 +224,7 @@ export class Explorer {
 	}
 
 	Explore(box: BoundingBox) {
-		// console.log("inside of explore();");
-		// console.log(box);
+
 		var p1: Place = box.SW;
 		var p2: Place = box.NW;
 		var p3: Place = box.NE;
@@ -229,44 +235,44 @@ export class Explorer {
 		var c3: number = this.DestSet.ComputeCostFrom(p3, this.CostCalculator);
 		var c4: number = this.DestSet.ComputeCostFrom(p4, this.CostCalculator);
 		var c5: number = this.DestSet.ComputeCostFrom(p5, this.CostCalculator);
+		var d1: number = this.Discretizer.Discretize(c1);
+		var d2: number = this.Discretizer.Discretize(c2);
+		var d3: number = this.Discretizer.Discretize(c3);
+		var d4: number = this.Discretizer.Discretize(c4);
+		var d5: number = this.Discretizer.Discretize(c5);
+
 		var dLat: number = box.Max.Lat - box.Min.Lat;
 		var dLon: number = box.Max.Long - box.Min.Long;
 
-		if (dLat < this.MaxSize && dLon < this.MaxSize && this.AllEqual(this.Discretizer.Discretize(c1), this.Discretizer.Discretize(c2), this.Discretizer.Discretize(c3), this.Discretizer.Discretize(c4), this.Discretizer.Discretize(c5))) {
-			// see: https://developers.google.com/maps/documentation/javascript/reference/visualization
-			// TODO: Paint map with translucid color based on cost.
-			//DrawRectangle(box, (c1 + c2 + c3 + c4) / 4);
+		if (dLat < this.MaxSize && dLon < this.MaxSize && this.AllEqual(d1, d2, d3, d4, d5)) {
+			//DrawRectangle(box, c5);
+			return;
+		}
+
+		if (dLat < this.MinSize && dLon < this.MinSize) {
+
+			//DrawDarkRectangle(box);
+			var qMin: number = Math.min(d1, d2, d3, d4);
+			this.FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, qMin);
+			return;
+		}
+
+		var mid: number;
+		var childBox1: BoundingBox;
+		var childBox2: BoundingBox;
+
+		if (dLat > dLon) {
+			mid = (box.Min.Lat + box.Max.Lat) / 2;
+			childBox1 = new BoundingBox(box.Min, new Place(mid, box.Max.Long));
+			childBox2 = new BoundingBox(new Place(mid, box.Min.Long), box.Max);
+			this.Explore(childBox1);
+			this.Explore(childBox2);
 		} else {
-
-			if (dLat < this.MinSize && dLon < this.MinSize) {
-
-				var qMin: number = this.Discretizer.Discretize(Math.min(c1, c2, c3, c4));
-
-				// console.log("Line");
-				// console.log(box);
-				//DrawDarkRectangle(box);
-				this.FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, qMin);
-				// TODO: Paint "line" color.
-			} else {
-				var mid: number;
-				var childBox1: BoundingBox;
-				var childBox2: BoundingBox;
-				if (dLat > dLon) {
-					mid = (box.Min.Lat + box.Max.Lat) / 2;
-					//mid = 0.3*box.Min.Lat + 0.7*box.Max.Lat;
-					childBox1 = new BoundingBox(box.Min, new Place(mid, box.Max.Long));
-					childBox2 = new BoundingBox(new Place(mid, box.Min.Long), box.Max);
-					this.Explore(childBox1);
-					this.Explore(childBox2);
-				} else {
-					mid = (box.Min.Long + box.Max.Long) / 2;
-					//mid = 0.3*box.Min.Long + 0.7*box.Max.Long;
-					childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid));
-					childBox2 = new BoundingBox(new Place(box.Min.Lat, mid), box.Max);
-					this.Explore(childBox1);
-					this.Explore(childBox2);
-				}
-			}
+			mid = (box.Min.Long + box.Max.Long) / 2;
+			childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid));
+			childBox2 = new BoundingBox(new Place(box.Min.Lat, mid), box.Max);
+			this.Explore(childBox1);
+			this.Explore(childBox2);
 		}
 	}
 }

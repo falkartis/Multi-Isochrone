@@ -16,21 +16,11 @@ To compile the ts file(s):
 tsc --project tsconfig.json
 ```
 
-Start a server. I used python, other options may also work.
+Start a server. I used Apache2, other options may also work, although I didn't have luck because of CORS and Mime types.
 
-```
-python3 -m http.server 8080 --bind 127.0.0.1 --directory ./
-```
+Open up a browser and go to http://127.0.0.1:8080/ or the address your server is serving.
 
-Node also works. To install the server run:
+## Known issues
 
-```
-sudo npm install http-server -g
-```
-And start it by running
+At longitudes near -180º or +180º this software may fail.
 
-```
-http-server
-```
-
-Open up a browser and go to http://127.0.0.1:8080/

@@ -5,6 +5,7 @@ export class GoogleMapsConnector implements MapConnector {
 
 	Map: google.maps.Map;
 	LatLngList: google.maps.LatLng[] = [];
+	PolylineList: google.maps.Polyline[] = [];
 
 	constructor(map: google.maps.Map) {
 		this.Map = map
@@ -42,8 +43,14 @@ export class GoogleMapsConnector implements MapConnector {
 			strokeOpacity: 0.6,
 			strokeWeight: 1,
 		});
-
+		this.PolylineList.push(line);
 		line.setMap(this.Map);
+	}
+
+	ClearLines() {
+		this.PolylineList.forEach( pl => pl.setMap(null));
+		this.PolylineList = [];
+		//polyline.setMap(null)
 	}
 
 	DrawRectangle(box: BoundingBox, color: string) {
@@ -69,5 +76,17 @@ export class GoogleMapsConnector implements MapConnector {
 	DrawDarkRectangle(box: BoundingBox) {
 		this.DrawRectangle(box, "#211");
 	}
-
+	GetBoundingBox() {
+		var box: google.maps.LatLngBounds|undefined = this.Map.getBounds();
+		if (box === undefined) {
+			console.log("Map.getBounds() returned undefined, can't build BoundingBox, returning 0,0.");
+			return new BoundingBox(new Place(0, 0))
+		}
+		var min = new Place(box.getSouthWest().lat(), box.getSouthWest().lng());
+		var max = new Place(box.getNorthEast().lat(), box.getNorthEast().lng());
+		var bb = new BoundingBox(min);
+		// Using expand method instead of the constructor with min anb max becaus google may mess up in some cases.
+		bb.Expand(max);
+		return bb;
+	}
 }

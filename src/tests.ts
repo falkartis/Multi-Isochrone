@@ -61,6 +61,12 @@ form.onsubmit = () => {
 
 // END TODO: tidy this up
 
+
+// Dirty trick?
+let RedrawTimer: ReturnType<typeof setTimeout>;
+// end dirty trick
+
+
 // TESTS:
 export class Tests {
 
@@ -120,14 +126,14 @@ export class Tests {
 		var costCalc: CostCalculator = new HaversineDistance();
 		//var costCalc: CostCalculator = new LatCorrectedEuclideanDistance(centroid.Place.Lat);
 		var centroidCost: number = dSet.ComputeCostFrom(centroid.Place, costCalc);
-		mapConn.AddMarker(centroid);
+		//mapConn.AddMarker(centroid);
 		console.log({centroidCost});
 
 		console.log("explore() start");
 		//var disc = new LogDiscretizer(2, 0.5, centroidCost * 0.995);
-		var disc = new LnDiscretizer(0.5, centroidCost * 0.988);
+		var disc = new LnDiscretizer(0.3, centroidCost * 0.988);
 		//var disc = new LinearDiscretizer(200, 0);
-		var explorer: Explorer = new Explorer(dSet, 200, boxSize/10, boxSize/120, costCalc, disc, mapConn);
+		var explorer: Explorer = new Explorer(dSet, 200, boxSize/10, boxSize/80, costCalc, disc, mapConn);
 		explorer.Explore(box);
 
 		console.log("explore() end");
@@ -137,6 +143,34 @@ export class Tests {
 		mapConn.AddMarker(berlin);
 		mapConn.AddMarker(zurich);
 		console.log("testExplore() end");
+
+		console.log("inside of AddRedraw()");
+	
+		var b = document.createElement('button');
+		b.innerHTML = "Redraw";
+
+		b.addEventListener('click', function(e){ Tests.Redraw(explorer); });
+		logTag.appendChild(b);
+
+		map.addListener("zoom_changed", () => { Tests.Redraw(explorer); });
+		map.addListener("dragend", () => { 		Tests.Redraw(explorer);	});
+	}
+
+	public static Redraw(explorer: Explorer){
+
+		clearTimeout(RedrawTimer);
+
+		setTimeout(()=>{
+			console.time('Redraw');
+			mapConn.ClearLines();
+			var box: BoundingBox = mapConn.GetBoundingBox();
+			var boxSize: number = Math.min(box.SizeLat, box.SizeLong);
+			explorer.SetMaxSize(boxSize/20);
+			explorer.SetMinSize(boxSize/80);
+			explorer.Explore(box);
+			console.timeEnd('Redraw')
+		}, 500);
+
 	}
 }
 
