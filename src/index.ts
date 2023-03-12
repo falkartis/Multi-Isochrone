@@ -1,10 +1,10 @@
-import { Tests } from "./tests/index.test";
+import { CostCalculator, EuclideanDistance, HaversineDistance } from './CostCalculator.js'
 
 let map: google.maps.Map;
 
 let LatLngList: google.maps.LatLng[] = [];
 
-function initMap(): void {
+export function initMap(): void {
 
 	const myLatLng = { lat: 0, lng: 0 };
 	map = new google.maps.Map(
@@ -16,11 +16,11 @@ function initMap(): void {
 	);
 }
 
-// declare global {
-// 	interface Window {
-// 		initMap: () => void;
-// 	}
-// }
+declare global {
+	interface Window {
+		initMap: () => void;
+	}
+}
 window.initMap = initMap;
 
 
@@ -52,7 +52,7 @@ form.onsubmit = () => {
 	return false; // prevent reload
 };
 
-function AddMarker(dest: Destination) {
+export function AddMarker(dest: Destination) {
 
 	var newlatLng: google.maps.LatLng = new google.maps.LatLng(dest.Place.Lat, dest.Place.Long);
 
@@ -73,11 +73,11 @@ function AddMarker(dest: Destination) {
 	map.fitBounds(latlngbounds); 
 }
 
-function DegToRad(degrees: number) {
+export function DegToRad(degrees: number) {
 	return degrees * (Math.PI / 180);
 }
 
-class Place {
+export class Place {
 	Lat: number;
 	Long: number;
 	constructor(lat: number, long: number) {
@@ -95,7 +95,7 @@ class Place {
 	}
 }
 
-class Destination {
+export class Destination {
 	Place: Place;
 	Wheight: number;
 	constructor(place: Place, wheight: number) {
@@ -104,7 +104,7 @@ class Destination {
 	}
 }
 
-class DestinationSet {
+export class DestinationSet {
 	Destinations: Destination[];
 	constructor(destinations: Destination[]) {
 		this.Destinations = destinations;
@@ -141,7 +141,7 @@ class DestinationSet {
 	}
 }
 
-class BoundingBox {
+export class BoundingBox {
 	Min: Place;
 	Max: Place;
 	get SW() {return new Place(this.Min.Lat, this.Min.Long); }
@@ -294,7 +294,7 @@ function AllEqual(v1: number, v2: number, v3: number, v4: number, v5: number) {
 	return v1 == v2 && v2 == v3 && v3 == v4 && v4 == v5;
 }
 
-class Explorer {
+export class Explorer {
 	DestSet: DestinationSet;
 	CostCalculator: CostCalculator;
 	Discretizer: Discretizer;

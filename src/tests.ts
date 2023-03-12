@@ -1,10 +1,6 @@
-// import { add } from '../src/index';
-
-// describe('testing index file', () => {
-//   test('empty string should result in zero', () => {
-//     expect(add('')).toBe(0);
-//   });
-// });
+import { AddMarker, Explorer, BoundingBox, DestinationSet, Place, Destination } from './index';
+import { CostCalculator, EuclideanDistance, HaversineDistance } from './CostCalculator.js'
+export { initMap } from './index';
 
 // TESTS:
 export class Tests {

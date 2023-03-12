@@ -1,4 +1,6 @@
-interface CostCalculator {
+import { DegToRad, Place } from './index';
+
+export interface CostCalculator {
 	GetCost(p1: Place, p2: Place): number;
 }
 
@@ -11,7 +13,7 @@ class TaxicabDistance implements CostCalculator {
 	}
 }
 
-class EuclideanDistance implements CostCalculator {
+export class EuclideanDistance implements CostCalculator {
 	GetCost(p1: Place, p2: Place) {
 		var dLat: number = p1.Lat - p2.Lat;
 		var dLong: number = p1.Long - p2.Long;
@@ -36,7 +38,7 @@ class LatCorrectedEuclideanDistance implements CostCalculator {
 	}
 }
 
-class HaversineDistance implements CostCalculator {
+export class HaversineDistance implements CostCalculator {
 	PlanetRadius: number;
 	constructor(planetRadius?: number) {
 		if (planetRadius == null) {
