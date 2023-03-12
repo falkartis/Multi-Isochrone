@@ -1,4 +1,4 @@
-import { DegToRad, Place } from './index';
+import { DegToRad, Place } from './index.js';
 
 export interface CostCalculator {
 	GetCost(p1: Place, p2: Place): number;

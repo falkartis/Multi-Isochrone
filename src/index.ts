@@ -1,4 +1,5 @@
 import { CostCalculator, EuclideanDistance, HaversineDistance } from './CostCalculator.js'
+import { Discretizer, LinearDiscretizer } from './Discretizer.js'
 
 let map: google.maps.Map;
 

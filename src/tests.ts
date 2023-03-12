@@ -1,6 +1,7 @@
-import { AddMarker, Explorer, BoundingBox, DestinationSet, Place, Destination } from './index';
+import { AddMarker, Explorer, BoundingBox, DestinationSet, Place, Destination } from './index.js';
 import { CostCalculator, EuclideanDistance, HaversineDistance } from './CostCalculator.js'
-export { initMap } from './index';
+import { LinearDiscretizer, LnDiscretizer } from './Discretizer.js'
+export { initMap } from './index.js';
 
 // TESTS:
 export class Tests {
@@ -57,7 +58,8 @@ export class Tests {
 		var boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
 		console.log("explore() start");
-		var disc = new LnDiscretizer(200, 0);
+		//var disc = new LnDiscretizer(200, 0);
+		var disc = new LinearDiscretizer(200, 0);
 		var explorer: Explorer = new Explorer(dSet, 200, boxSize/10, boxSize/120, undefined, disc);
 		explorer.Explore(box);
 
