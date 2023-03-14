@@ -33,6 +33,8 @@ export class GoogleMapsConnector implements MapConnector {
 	}
 
 	AddLine(p1: Place, p2: Place) {
+		// TODO: merge line to existing polylines i possible.
+		// TODO: Dictionary<number, Polyline[]> would be a good idea.
 		const lineCoords = [{ lat: p1.Lat, lng: p1.Long }, { lat: p2.Lat, lng: p2.Long } ];
 		const line = new google.maps.Polyline({
 			path: lineCoords,

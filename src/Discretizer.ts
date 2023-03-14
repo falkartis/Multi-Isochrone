@@ -28,7 +28,7 @@ export class LnDiscretizer implements Discretizer {
 	}
 
 	Discretize(v: number) {
-		return Math.exp(this.Linear.Discretize(Math.log(v - this.Offset))) + this.Offset;
+		return Math.exp(this.Linear.Discretize(Math.log(Math.abs(v - this.Offset)))) + this.Offset;
 	}
 }
 
@@ -49,6 +49,6 @@ export class LogDiscretizer implements Discretizer {
 	}
 
 	Discretize(v: number) {
-		return Math.pow(this.Base, this.Linear.Discretize(this.LogBase(this.Base, v - this.Offset))) + this.Offset;
+		return Math.pow(this.Base, this.Linear.Discretize(this.LogBase(this.Base, Math.abs(v - this.Offset)))) + this.Offset;
 	}
 }

@@ -42,6 +42,7 @@ export class DestinationSet {
 		this.Destinations = destinations;
 	}
 	ComputeCostFrom(origin: Place, calc: CostCalculator) {
+		//TODO: make a cost cache, how long to keep the values? how without dictionary? Make my own dictionary implementation?
 		let totalCost: number = 0;
 		for (let destination of this.Destinations) {
 			var cost = destination.Wheight * calc.GetCost(origin, destination.Place);
@@ -249,7 +250,11 @@ export class Explorer {
 			return;
 		}
 
+		// TODO: if only d5 is different we also have to recurse.
+
 		if (dLat < this.MinSize && dLon < this.MinSize) {
+
+			// TODO: Detect if box spans over 2 different lines (d1, d2, d3 and d4 have 3 different values) in this case draw twice
 
 			//DrawDarkRectangle(box);
 			var qMin: number = Math.min(d1, d2, d3, d4);

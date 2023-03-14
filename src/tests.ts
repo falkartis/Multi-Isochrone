@@ -131,7 +131,8 @@ export class Tests {
 
 		console.log("explore() start");
 		//var disc = new LogDiscretizer(2, 0.5, centroidCost * 0.995);
-		var disc = new LnDiscretizer(0.3, centroidCost * 0.988);
+		//var disc = new LnDiscretizer(0.1, centroidCost * 0.988);
+		var disc = new LnDiscretizer(0.3, centroidCost * 0.98);
 		//var disc = new LinearDiscretizer(200, 0);
 		var explorer: Explorer = new Explorer(dSet, 200, boxSize/10, boxSize/80, costCalc, disc, mapConn);
 		explorer.Explore(box);
