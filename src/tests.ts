@@ -172,8 +172,8 @@ export class Tests {
 			mapConn.ClearLines();
 			var box: BoundingBox = mapConn.GetBoundingBox();
 			var boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-			explorer.SetMaxSize(boxSize/20);
-			explorer.SetMinSize(boxSize/80);
+			explorer.SetMaxSize(boxSize/15);
+			explorer.SetMinSize(boxSize/75);
 			explorer.Explore(box);
 			console.timeEnd('Redraw')
 		}, 500);

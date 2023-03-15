@@ -249,7 +249,9 @@ export class Explorer {
 		var dLat: number = box.Max.Lat - box.Min.Lat;
 		var dLon: number = box.Max.Long - box.Min.Long;
 
-		if (dLat < this.MaxSize && dLon < this.MaxSize && this.AllEqual(d1, d2, d3, d4, d5)) {
+		var allEqual = this.AllEqual(d1, d2, d3, d4, d5);
+
+		if (dLat < this.MaxSize && dLon < this.MaxSize && allEqual) {
 			//this.Map.DrawRedRectangle(box, c5);
 			return;
 		}
