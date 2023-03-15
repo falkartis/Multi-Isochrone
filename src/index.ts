@@ -9,6 +9,10 @@ export function DegToRad(degrees: number) {
 	return degrees * (Math.PI / 180);
 }
 
+export function Lerp(v1: number, v2: number, t: number): number {
+	return v1 * (1 - t) + v2 * t;
+}
+
 export class Place {
 	Lat: number;
 	Long: number;
@@ -216,7 +220,7 @@ export class Explorer {
 		if (l1 == null || l2 == null) {
 			console.log({v1, v2, v3, v4, qMin, index});
 		} else {
-			this.Map.AddLine(l1, l2);
+			this.Map.AddLine(l1, l2, qMin);
 		}
 	}
 
@@ -246,7 +250,7 @@ export class Explorer {
 		var dLon: number = box.Max.Long - box.Min.Long;
 
 		if (dLat < this.MaxSize && dLon < this.MaxSize && this.AllEqual(d1, d2, d3, d4, d5)) {
-			//DrawRectangle(box, c5);
+			//this.Map.DrawRedRectangle(box, c5);
 			return;
 		}
 
@@ -262,22 +266,24 @@ export class Explorer {
 			return;
 		}
 
-		var mid: number;
-		var childBox1: BoundingBox;
-		var childBox2: BoundingBox;
-
 		if (dLat > dLon) {
-			mid = (box.Min.Lat + box.Max.Lat) / 2;
-			childBox1 = new BoundingBox(box.Min, new Place(mid, box.Max.Long));
-			childBox2 = new BoundingBox(new Place(mid, box.Min.Long), box.Max);
+			var mid1 = Lerp(box.Min.Lat, box.Max.Lat, 0.4);
+			var mid2 = Lerp(box.Min.Lat, box.Max.Lat, 0.6);
+			var childBox1 = new BoundingBox(box.Min, new Place(mid1, box.Max.Long));
+			var childBox2 = new BoundingBox(new Place(mid1, box.Min.Long), new Place(mid2, box.Max.Long));
+			var childBox3 = new BoundingBox(new Place(mid2, box.Min.Long), box.Max);
+			this.Explore(childBox2); // Starting on purpose with the center one
 			this.Explore(childBox1);
-			this.Explore(childBox2);
+			this.Explore(childBox3);
 		} else {
-			mid = (box.Min.Long + box.Max.Long) / 2;
-			childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid));
-			childBox2 = new BoundingBox(new Place(box.Min.Lat, mid), box.Max);
+			var mid1 = Lerp(box.Min.Long, box.Max.Long, 0.4);
+			var mid2 = Lerp(box.Min.Long, box.Max.Long, 0.6);
+			var childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid1));
+			var childBox2 = new BoundingBox(new Place(box.Min.Lat, mid1), new Place(box.Max.Lat, mid2));
+			var childBox3 = new BoundingBox(new Place(box.Min.Lat, mid2), box.Max);
+			this.Explore(childBox2); // Starting on purpose with the center one
 			this.Explore(childBox1);
-			this.Explore(childBox2);
+			this.Explore(childBox3);
 		}
 	}
 }

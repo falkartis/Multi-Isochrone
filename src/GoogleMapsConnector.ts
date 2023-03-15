@@ -5,7 +5,8 @@ export class GoogleMapsConnector implements MapConnector {
 
 	Map: google.maps.Map;
 	LatLngList: google.maps.LatLng[] = [];
-	PolylineList: google.maps.Polyline[] = [];
+	PolylineList: Map<number, google.maps.Polyline[]> = new Map<number, google.maps.Polyline[]>();
+	AddedLabels: Map<number, google.maps.Marker> = new Map<number, google.maps.Marker>();
 
 	constructor(map: google.maps.Map) {
 		this.Map = map
@@ -17,8 +18,8 @@ export class GoogleMapsConnector implements MapConnector {
 
 		new google.maps.Marker({
 			position: newlatLng,
-			label: "" + dest.Wheight + "",
-			map: this.Map,
+			label: { text: "" + dest.Wheight + "" },
+			map: this.Map
 		});
 
 		this.LatLngList.push(newlatLng);
@@ -32,27 +33,72 @@ export class GoogleMapsConnector implements MapConnector {
 		this.Map.fitBounds(latlngbounds); 
 	}
 
-	AddLine(p1: Place, p2: Place) {
-		// TODO: merge line to existing polylines i possible.
-		// TODO: Dictionary<number, Polyline[]> would be a good idea.
-		const lineCoords = [{ lat: p1.Lat, lng: p1.Long }, { lat: p2.Lat, lng: p2.Long } ];
+	AddLabel(p: Place, cost: number) {
+
+		var newlatLng: google.maps.LatLng = new google.maps.LatLng(p.Lat, p.Long);
+
+		var mark = new google.maps.Marker({
+			position: newlatLng,
+			label: { text: cost.toFixed(2) },
+			map: this.Map,
+			icon: { url: "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" }
+		});
+		this.AddedLabels.set(cost, mark);
+	}
+
+	AddLine(p1: Place, p2: Place, cost: number) {
+		const lineCoords: google.maps.LatLng[] = [
+			new google.maps.LatLng(p1.Lat, p1.Long),
+			new google.maps.LatLng(p2.Lat, p2.Long)
+		];
 		const line = new google.maps.Polyline({
 			path: lineCoords,
 			// geodesic: does it go faster when set to false?
 			// geodesic: does it look more precise when set to true?
 			geodesic: false,
-			strokeColor: "#211",
+			strokeColor: "#411",
 			strokeOpacity: 0.6,
 			strokeWeight: 1,
 		});
-		this.PolylineList.push(line);
-		line.setMap(this.Map);
+		var toAdd = true;
+		if (this.PolylineList.has(cost)) {
+
+			var PlList = this.PolylineList.get(cost) ?? []; // ?? [] is syntax shugar
+			
+			PlList.forEach(pl => {
+				var path = pl.getPath();
+				var arr = path.getArray();
+				if (arr[0].equals(lineCoords[0])){					path.insertAt(0, lineCoords[1]);				toAdd = false;	}
+				if (arr[0].equals(lineCoords[1])){					path.insertAt(0, lineCoords[0]);				toAdd = false;	}
+				if (arr[arr.length - 1].equals(lineCoords[0])){		path.insertAt(arr.length - 1, lineCoords[1]);	toAdd = false;	}
+				if (arr[arr.length - 1].equals(lineCoords[1])){		path.insertAt(arr.length - 1, lineCoords[0]);	toAdd = false;	}
+
+				//TODO: Exit the loop if there are 2 matches.
+			});
+
+			if (toAdd) {
+				PlList.push(line);
+			}
+
+		} else {
+			var list: google.maps.Polyline[] = [];
+			list.push(line);
+			this.PolylineList.set(cost, list);
+			if (!this.AddedLabels.has(cost)) {
+				this.AddLabel(p1, cost);
+			}
+		}
+		if (toAdd) {
+			line.setMap(this.Map);
+		}
 	}
 
 	ClearLines() {
-		this.PolylineList.forEach( pl => pl.setMap(null));
-		this.PolylineList = [];
-		//polyline.setMap(null)
+		this.PolylineList.forEach((li, cost) => li.forEach(pl => pl.setMap(null)));
+		this.PolylineList = new Map<number, google.maps.Polyline[]>();
+
+		this.AddedLabels.forEach( l => l.setMap(null));
+		this.AddedLabels = new Map<number, google.maps.Marker>();
 	}
 
 	DrawRectangle(box: BoundingBox, color: string) {
