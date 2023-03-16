@@ -130,14 +130,9 @@ export class Tests {
 		console.log({centroidCost});
 
 		console.log("explore() start");
-		//var disc = new LogDiscretizer(2, 0.5, centroidCost * 0.995);
 		//var disc = new LnDiscretizer(0.1, centroidCost * 0.988);
-		//var disc = new LnDiscretizer(0.3, centroidCost * 0.98);
-		//var disc = new LnDiscretizer(0.3, 8888);
-		//var disc = new LnDiscretizer(0.3, 8933);
-		//var disc = new LnDiscretizer(0.3, 8951);
-		//var disc = new LnDiscretizer(0.3, 8961);
-		var disc = new LnDiscretizer(0.2, 8964);
+		//var disc = new LnDiscretizer(0.1, 8965.5);
+		var disc = new LnDiscretizer(0.6, 8965.55);
 		//var disc = new LinearDiscretizer(200, 0);
 		var explorer: Explorer = new Explorer(dSet, 200, boxSize/10, boxSize/80, costCalc, disc, mapConn);
 
@@ -172,11 +167,11 @@ export class Tests {
 			mapConn.ClearLines();
 			var box: BoundingBox = mapConn.GetBoundingBox();
 			var boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-			explorer.SetMaxSize(boxSize/15);
-			explorer.SetMinSize(boxSize/75);
+			explorer.SetMaxSize(boxSize/10);
+			explorer.SetMinSize(boxSize/30);
 			explorer.Explore(box);
 			console.timeEnd('Redraw')
-		}, 500);
+		}, 1000);
 
 	}
 }

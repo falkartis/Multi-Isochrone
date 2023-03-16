@@ -7,12 +7,10 @@ export class LinearDiscretizer implements Discretizer {
 	Offset: number;
 	constructor(step: number, offset?: number) {
 		this.Step = step;
-		if (offset == null)		this.Offset = 0;
-		else 					this.Offset = offset;
+		this.Offset = offset ?? 0;
 	}
 	Discretize(v: number) {
 		// ceil or floor, that is the question
-
 		return this.Step * Math.ceil((v - this.Offset) / this.Step) + this.Offset;
 	}
 }
@@ -23,8 +21,7 @@ export class LnDiscretizer implements Discretizer {
 	Linear: LinearDiscretizer;
 	constructor(step: number, offset?: number) {
 		this.Linear = new LinearDiscretizer(step);
-		if (offset == null)		this.Offset = 0;
-		else 					this.Offset = offset;
+		this.Offset = offset ?? 0;
 	}
 
 	Discretize(v: number) {
@@ -39,9 +36,8 @@ export class LogDiscretizer implements Discretizer {
 	Linear: LinearDiscretizer;
 	constructor(base: number, step: number, offset?: number) {
 		this.Base = base;
+		this.Offset = offset ?? 0;
 		this.Linear = new LinearDiscretizer(step);
-		if (offset == null)		this.Offset = 0;
-		else 					this.Offset = offset;
 	}
 
 	LogBase(x:number, y:number) {

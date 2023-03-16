@@ -51,8 +51,6 @@ export class HaversineDistance implements CostCalculator {
 	 *	https://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
 	 *	http://www.movable-type.co.uk/scripts/latlong.html
 	*/
-
-
 	GetCost(p1: Place, p2: Place) {
 
 		var dLat = DegToRad(p2.Lat - p1.Lat);

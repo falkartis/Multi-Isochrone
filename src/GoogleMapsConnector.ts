@@ -47,6 +47,7 @@ export class GoogleMapsConnector implements MapConnector {
 	}
 
 	AddLine(p1: Place, p2: Place, cost: number) {
+		//TODO: Refactor this method.
 		const lineCoords: google.maps.LatLng[] = [
 			new google.maps.LatLng(p1.Lat, p1.Long),
 			new google.maps.LatLng(p2.Lat, p2.Long)
@@ -58,23 +59,22 @@ export class GoogleMapsConnector implements MapConnector {
 			geodesic: false,
 			strokeColor: "#411",
 			strokeOpacity: 0.6,
-			strokeWeight: 1,
+			strokeWeight: 2,
+			//draggable: true,
 		});
 		var toAdd = true;
 		if (this.PolylineList.has(cost)) {
 
 			var PlList = this.PolylineList.get(cost) ?? []; // ?? [] is syntax shugar
 			
-			PlList.forEach(pl => {
+			for(let pl of PlList){
 				var path = pl.getPath();
 				var arr = path.getArray();
-				if (arr[0].equals(lineCoords[0])){					path.insertAt(0, lineCoords[1]);				toAdd = false;	}
-				if (arr[0].equals(lineCoords[1])){					path.insertAt(0, lineCoords[0]);				toAdd = false;	}
-				if (arr[arr.length - 1].equals(lineCoords[0])){		path.insertAt(arr.length - 1, lineCoords[1]);	toAdd = false;	}
-				if (arr[arr.length - 1].equals(lineCoords[1])){		path.insertAt(arr.length - 1, lineCoords[0]);	toAdd = false;	}
-
-				//TODO: Exit the loop if there are 2 matches.
-			});
+				if (arr[0].equals(lineCoords[0])){				path.insertAt(0, lineCoords[1]);			toAdd = false; break; }
+				if (arr[0].equals(lineCoords[1])){				path.insertAt(0, lineCoords[0]);			toAdd = false; break; }
+				if (arr[arr.length - 1].equals(lineCoords[0])){	path.insertAt(arr.length, lineCoords[1]);	toAdd = false; break; }
+				if (arr[arr.length - 1].equals(lineCoords[1])){	path.insertAt(arr.length, lineCoords[0]);	toAdd = false; break; }
+			}
 
 			if (toAdd) {
 				PlList.push(line);

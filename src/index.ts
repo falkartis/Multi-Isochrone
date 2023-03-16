@@ -1,6 +1,7 @@
 import { CostCalculator, EuclideanDistance, HaversineDistance } from './CostCalculator.js'
 import { Discretizer, LinearDiscretizer } from './Discretizer.js'
 import { MapConnector, ConsoleLogConnector } from './MapConnector.js'
+import { HashCode, Dictionary } from './dictionary.js'
 
 
 
@@ -13,7 +14,7 @@ export function Lerp(v1: number, v2: number, t: number): number {
 	return v1 * (1 - t) + v2 * t;
 }
 
-export class Place {
+export class Place implements HashCode {
 	Lat: number;
 	Long: number;
 	constructor(lat: number, long: number) {
@@ -29,6 +30,14 @@ export class Place {
 	Lerp(t: number, o: Place) {
 		return this.Scale(1 - t).Add(o.Scale(t));
 	}
+	GetHashCode() {
+		var la = 90 / this.Lat;
+		var lo = 180 / this.Long;
+		return la * 7919 + lo;
+	}
+	Equals(other: Place) {
+		return this.Lat == other.Lat && this.Long == other.Long;
+	}
 }
 
 export class Destination {
@@ -42,16 +51,25 @@ export class Destination {
 
 export class DestinationSet {
 	Destinations: Destination[];
+	CostCache: Dictionary<Place, number>;
 	constructor(destinations: Destination[]) {
 		this.Destinations = destinations;
+		this.CostCache = new Dictionary<Place, number>();
+	}
+	ClearCostCache() {
+		this.CostCache.Clear();
 	}
 	ComputeCostFrom(origin: Place, calc: CostCalculator) {
-		//TODO: make a cost cache, how long to keep the values? how without dictionary? Make my own dictionary implementation?
+		var cached = this.CostCache.Get(origin);
+		if (cached != undefined)
+			return cached;
+
 		let totalCost: number = 0;
 		for (let destination of this.Destinations) {
 			var cost = destination.Wheight * calc.GetCost(origin, destination.Place);
 			totalCost += cost;
 		}
+		this.CostCache.Add(origin, totalCost);
 		return totalCost;
 	}
 	GetBoundingBox() {
@@ -160,23 +178,10 @@ export class Explorer {
 		this.BandSize = bandSize;
 		this.MaxSize = maxsize;
 		this.MinSize = minsize;
-		if (costCalc == null) {
-			//TODO: choose a cheaper default calculator
-			this.CostCalculator = new HaversineDistance();
-		} else {
-			this.CostCalculator = costCalc;
-		}
-		if (disc == null) {
-			this.Discretizer = new LinearDiscretizer(bandSize);
-		} else {
-			this.Discretizer = disc;
-		}
-		if (map == null) {
-			//TODO: Some default implementation? (a logger maybe)
-			this.Map = new ConsoleLogConnector();
-		} else {
-			this.Map = map;
-		}
+
+		this.CostCalculator = costCalc ?? new EuclideanDistance();
+		this.Discretizer = disc ?? new LinearDiscretizer(bandSize);
+		this.Map = map ?? new ConsoleLogConnector();
 	}
 	SetMaxSize(v: number) {
 		this.MaxSize = v;
@@ -186,7 +191,7 @@ export class Explorer {
 	}
 
 	FindAndDrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place, c3: number, p4: Place, c4: number, qMin: number) {
-		// TODO: Paint "line" color.
+
 		var v1: number = c1 - qMin;
 		var v2: number = c2 - qMin;
 		var v3: number = c3 - qMin;
