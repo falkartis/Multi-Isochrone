@@ -265,17 +265,27 @@ export class Explorer {
 
 		if (dLat < this.MinSize && dLon < this.MinSize) {
 
-			// TODO: Detect if box spans over 2 different lines (d1, d2, d3 and d4 have 3 different values) in this case draw twice
+			//this.Map.DrawDarkRectangle(box);
 
-			//DrawDarkRectangle(box);
-			var qMin: number = Math.min(d1, d2, d3, d4);
-			this.FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, qMin);
+			var vals = new Map<number, number>();
+			vals.set(d1, 1);
+			vals.set(d2, 1 + (vals.get(d2) ?? 0));
+			vals.set(d3, 1 + (vals.get(d3) ?? 0));
+			vals.set(d4, 1 + (vals.get(d4) ?? 0));
+
+			var max = Math.max(d1, d2, d3, d4);
+			var sortVals = Array.from(vals.keys());
+
+			for (let cost of sortVals) {
+				if (cost != max)
+					this.FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, cost);
+			}
 			return;
 		}
 
 		if (dLat > dLon) {
-			var mid1 = Lerp(box.Min.Lat, box.Max.Lat, 0.4);
-			var mid2 = Lerp(box.Min.Lat, box.Max.Lat, 0.6);
+			var mid1 = Lerp(box.Min.Lat, box.Max.Lat, 0.45);
+			var mid2 = Lerp(box.Min.Lat, box.Max.Lat, 0.55);
 			var childBox1 = new BoundingBox(box.Min, new Place(mid1, box.Max.Long));
 			var childBox2 = new BoundingBox(new Place(mid1, box.Min.Long), new Place(mid2, box.Max.Long));
 			var childBox3 = new BoundingBox(new Place(mid2, box.Min.Long), box.Max);
@@ -283,8 +293,8 @@ export class Explorer {
 			this.Explore(childBox1);
 			this.Explore(childBox3);
 		} else {
-			var mid1 = Lerp(box.Min.Long, box.Max.Long, 0.4);
-			var mid2 = Lerp(box.Min.Long, box.Max.Long, 0.6);
+			var mid1 = Lerp(box.Min.Long, box.Max.Long, 0.45);
+			var mid2 = Lerp(box.Min.Long, box.Max.Long, 0.55);
 			var childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid1));
 			var childBox2 = new BoundingBox(new Place(box.Min.Lat, mid1), new Place(box.Max.Lat, mid2));
 			var childBox3 = new BoundingBox(new Place(box.Min.Lat, mid2), box.Max);

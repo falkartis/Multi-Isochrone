@@ -20,7 +20,7 @@ input {
 	width: 40px;
 }
 #sideBar {
-	display: none;
+/*	display: none;*/
 	float: left;
 	width: 10%;
 	height: 100%;

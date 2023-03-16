@@ -7,6 +7,7 @@ export class GoogleMapsConnector implements MapConnector {
 	LatLngList: google.maps.LatLng[] = [];
 	PolylineList: Map<number, google.maps.Polyline[]> = new Map<number, google.maps.Polyline[]>();
 	AddedLabels: Map<number, google.maps.Marker> = new Map<number, google.maps.Marker>();
+	Rectangles: google.maps.Rectangle[] = [];
 
 	constructor(map: google.maps.Map) {
 		this.Map = map
@@ -99,6 +100,9 @@ export class GoogleMapsConnector implements MapConnector {
 
 		this.AddedLabels.forEach( l => l.setMap(null));
 		this.AddedLabels = new Map<number, google.maps.Marker>();
+
+		this.Rectangles.forEach( r => r.setMap(null));
+		this.Rectangles = [];
 	}
 
 	DrawRectangle(box: BoundingBox, color: string) {
@@ -109,13 +113,14 @@ export class GoogleMapsConnector implements MapConnector {
 
 		const rectangle = new google.maps.Rectangle({
 			strokeColor: color,
-			strokeOpacity: 0.35,
+			strokeOpacity: 0.3,
 			strokeWeight: 1,
 			fillColor: color,
-			fillOpacity: 0.3,
+			fillOpacity: 0.25,
 			map: this.Map,
 			bounds: {north, south, east, west},
-		});		
+		});
+		this.Rectangles.push(rectangle);
 	}
 
 	DrawRedRectangle(box: BoundingBox, cost: number) {

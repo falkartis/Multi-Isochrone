@@ -134,9 +134,9 @@ export class Tests {
 		//var disc = new LnDiscretizer(0.1, 8965.5);
 		var disc = new LnDiscretizer(0.6, 8965.55);
 		//var disc = new LinearDiscretizer(200, 0);
-		var explorer: Explorer = new Explorer(dSet, 200, boxSize/10, boxSize/80, costCalc, disc, mapConn);
+		var explorer: Explorer = new Explorer(dSet, 200, boxSize/15, boxSize/50, costCalc, disc, mapConn);
 
-		//explorer.Explore(box);
+		explorer.Explore(box);
 
 		console.log("explore() end");
 
@@ -166,9 +166,10 @@ export class Tests {
 			console.time('Redraw');
 			mapConn.ClearLines();
 			var box: BoundingBox = mapConn.GetBoundingBox();
+			box.ExpandBy(15);
 			var boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-			explorer.SetMaxSize(boxSize/10);
-			explorer.SetMinSize(boxSize/30);
+			explorer.SetMaxSize(boxSize/8);
+			explorer.SetMinSize(boxSize/50);
 			explorer.Explore(box);
 			console.timeEnd('Redraw')
 		}, 1000);
