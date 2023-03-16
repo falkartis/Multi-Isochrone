@@ -99,14 +99,7 @@ export class DestinationSet {
 export class BoundingBox {
 	Min: Place;
 	Max: Place;
-	get SW() {return new Place(this.Min.Lat, this.Min.Long); }
-	get NW() {return new Place(this.Max.Lat, this.Min.Long); }
-	get NE() {return new Place(this.Max.Lat, this.Max.Long); }
-	get SE() {return new Place(this.Min.Lat, this.Max.Long); }
-	get Center() {return new Place((this.Min.Lat + this.Max.Lat)/2,(this.Min.Long + this.Max.Long)/2); }
-	get SizeLat() { return this.Max.Lat - this.Min.Lat; }
-	get SizeLong() { return this.Max.Long - this.Min.Long; }
-
+	
 	constructor(place: Place, max?: Place) {
 		this.Min = new Place(place.Lat, place.Long);
 		if (max == null) {
@@ -115,6 +108,24 @@ export class BoundingBox {
 			this.Max = new Place(max.Lat, max.Long);
 		}
 	}
+
+	get SW() {return new Place(this.Min.Lat, this.Min.Long); }
+	get NW() {return new Place(this.Max.Lat, this.Min.Long); }
+	get NE() {return new Place(this.Max.Lat, this.Max.Long); }
+	get SE() {return new Place(this.Min.Lat, this.Max.Long); }
+	
+	get CW() {return new Place((this.Min.Lat + this.Max.Lat) / 2, this.Min.Long); }
+	get NC() {return new Place(this.Max.Lat, (this.Min.Long + this.Max.Long) / 2); }
+	get CE() {return new Place((this.Min.Lat + this.Max.Lat) / 2, this.Max.Long); }
+	get SC() {return new Place(this.Min.Lat, (this.Min.Long + this.Max.Long) / 2); }
+
+	get Center() {return new Place((this.Min.Lat + this.Max.Lat)/2,(this.Min.Long + this.Max.Long)/2); }
+
+	get SizeLat() { return this.Max.Lat - this.Min.Lat; }
+	get SizeLong() { return this.Max.Long - this.Min.Long; }
+
+	//TODO: Make a grid function that gets 2 parameters, rows and cols, and returns a grid of places
+
 	Expand(place: Place) {
 		if (place.Lat < this.Min.Lat) { this.Min.Lat = place.Lat; }
 		if (place.Lat > this.Max.Lat) { this.Max.Lat = place.Lat; }
@@ -190,7 +201,7 @@ export class Explorer {
 		this.MinSize = v;
 	}
 
-	FindAndDrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place, c3: number, p4: Place, c4: number, qMin: number) {
+	DrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place, c3: number, p4: Place, c4: number, qMin: number) {
 
 		var v1: number = c1 - qMin;
 		var v2: number = c2 - qMin;
@@ -229,8 +240,31 @@ export class Explorer {
 		}
 	}
 
-	AllEqual(v1: number, v2: number, v3: number, v4: number, v5: number) {
-		return v1 == v2 && v2 == v3 && v3 == v4 && v4 == v5;
+	AllEqual(first: number, ...values: number[]) {
+		for (let val of values) {
+			if (val != first)
+				return false;
+		}
+		return true;
+	}
+
+	FindLines(	p1: Place,	p2: Place,	p3: Place,	p4: Place,
+				c1: number, c2: number, c3: number, c4: number,
+				d1: number, d2: number, d3: number, d4: number) {
+
+		var vals = new Map<number, number>();
+		vals.set(d1, 1);
+		vals.set(d2, 1 + (vals.get(d2) ?? 0));
+		vals.set(d3, 1 + (vals.get(d3) ?? 0));
+		vals.set(d4, 1 + (vals.get(d4) ?? 0));
+
+		var max = Math.max(d1, d2, d3, d4);
+		var sortVals = Array.from(vals.keys());
+
+		for (let cost of sortVals) {
+			if (cost != max)
+				this.DrawLine(p1, c1, p2, c2, p3, c3, p4, c4, cost);
+		}
 	}
 
 	Explore(box: BoundingBox) {
@@ -239,7 +273,11 @@ export class Explorer {
 		var p2: Place = box.NW;
 		var p3: Place = box.NE;
 		var p4: Place = box.SE;
-		var p5: Place = box.Center;
+		var p5: Place = box.CW;
+		var p6: Place = box.NC;
+		var p7: Place = box.CE;
+		var p8: Place = box.SC;
+		var p9: Place = box.Center;
 		var c1: number = this.DestSet.ComputeCostFrom(p1, this.CostCalculator);
 		var c2: number = this.DestSet.ComputeCostFrom(p2, this.CostCalculator);
 		var c3: number = this.DestSet.ComputeCostFrom(p3, this.CostCalculator);
@@ -266,20 +304,7 @@ export class Explorer {
 		if (dLat < this.MinSize && dLon < this.MinSize) {
 
 			//this.Map.DrawDarkRectangle(box);
-
-			var vals = new Map<number, number>();
-			vals.set(d1, 1);
-			vals.set(d2, 1 + (vals.get(d2) ?? 0));
-			vals.set(d3, 1 + (vals.get(d3) ?? 0));
-			vals.set(d4, 1 + (vals.get(d4) ?? 0));
-
-			var max = Math.max(d1, d2, d3, d4);
-			var sortVals = Array.from(vals.keys());
-
-			for (let cost of sortVals) {
-				if (cost != max)
-					this.FindAndDrawLine(p1, c1, p2, c2, p3, c3, p4, c4, cost);
-			}
+			this.FindLines(p1, p2, p3, p4, c1, c2, c3, c4, d1, d2, d3, d4);
 			return;
 		}
 
@@ -289,18 +314,19 @@ export class Explorer {
 			var childBox1 = new BoundingBox(box.Min, new Place(mid1, box.Max.Long));
 			var childBox2 = new BoundingBox(new Place(mid1, box.Min.Long), new Place(mid2, box.Max.Long));
 			var childBox3 = new BoundingBox(new Place(mid2, box.Min.Long), box.Max);
-			this.Explore(childBox2); // Starting on purpose with the center one
-			this.Explore(childBox1);
-			this.Explore(childBox3);
+			this.ExploreThem(childBox2, childBox1, childBox3); // Starting on purpose with the center one
 		} else {
 			var mid1 = Lerp(box.Min.Long, box.Max.Long, 0.45);
 			var mid2 = Lerp(box.Min.Long, box.Max.Long, 0.55);
 			var childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid1));
 			var childBox2 = new BoundingBox(new Place(box.Min.Lat, mid1), new Place(box.Max.Lat, mid2));
 			var childBox3 = new BoundingBox(new Place(box.Min.Lat, mid2), box.Max);
-			this.Explore(childBox2); // Starting on purpose with the center one
-			this.Explore(childBox1);
-			this.Explore(childBox3);
+			this.ExploreThem(childBox2, childBox1, childBox3); // Starting on purpose with the center one
+		}
+	}
+	ExploreThem(...boxes: BoundingBox[]) {
+		for (let box of boxes) {
+			this.Explore(box);
 		}
 	}
 }
