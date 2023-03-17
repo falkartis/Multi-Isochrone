@@ -1,7 +1,7 @@
 import { CostCalculator, EuclideanDistance, HaversineDistance } from './CostCalculator.js'
 import { Discretizer, LinearDiscretizer } from './Discretizer.js'
 import { MapConnector, ConsoleLogConnector } from './MapConnector.js'
-import { HashCode, Dictionary } from './dictionary.js'
+import { HashCode, Dictionary } from './Dictionary.js'
 
 
 
@@ -134,14 +134,13 @@ export class BoundingBox {
 		const dLong = this.SizeLong / (cols - 1);
 
 		for (let i = 0; i < rows; i++) {
-			const row = [];
+			const row: Place[] = [];
 
 			for (let j = 0; j < cols; j++) {
 				const lat = this.Min.Lat + dLat * i;
 				const long = this.Min.Long + dLong * j;
 				row.push(new Place(lat, long));
 			}
-
 			grid.push(row);
 		}
 
@@ -220,20 +219,18 @@ export class Explorer {
 	DestSet: DestinationSet;
 	CostCalculator: CostCalculator;
 	Discretizer: Discretizer;
-	BandSize: number;
 	MaxSize: number;
 	MinSize: number;
 	Map: MapConnector;
 	Debug: boolean = false;
 
-	constructor(dSet: DestinationSet, bandSize: number, maxsize: number, minsize: number, costCalc?: CostCalculator, disc?: Discretizer, map?: MapConnector) {
+	constructor(dSet: DestinationSet, maxsize: number, minsize: number, disc: Discretizer, costCalc?: CostCalculator, map?: MapConnector) {
 		this.DestSet = dSet;
-		this.BandSize = bandSize;
 		this.MaxSize = maxsize;
 		this.MinSize = minsize;
 
 		this.CostCalculator = costCalc ?? new EuclideanDistance();
-		this.Discretizer = disc ?? new LinearDiscretizer(bandSize);
+		this.Discretizer = disc;
 		this.Map = map ?? new ConsoleLogConnector();
 	}
 	SetMaxSize(v: number) {

@@ -134,7 +134,7 @@ export class Tests {
 		//let disc = new LnDiscretizer(0.1, 8965.5);
 		let disc = new LnDiscretizer(0.6, 8965.55);
 		//let disc = new LinearDiscretizer(200, 0);
-		let explorer: Explorer = new Explorer(dSet, 200, boxSize/15, boxSize/50, costCalc, disc, mapConn);
+		let explorer: Explorer = new Explorer(dSet, boxSize/15, boxSize/50, disc, costCalc, mapConn);
 
 		explorer.Explore(box);
 
