@@ -7,16 +7,16 @@ export interface CostCalculator {
 class TaxicabDistance implements CostCalculator {
 	// TODO: Implement rotation, try to do as much as possible in the constructor.
 	GetCost(p1: Place, p2: Place) {
-		var dLat: number = Math.abs(p1.Lat - p2.Lat);
-		var dLong: number = Math.abs(p1.Long - p2.Long);
+		let dLat: number = Math.abs(p1.Lat - p2.Lat);
+		let dLong: number = Math.abs(p1.Long - p2.Long);
 		return dLat + dLong;	
 	}
 }
 
 export class EuclideanDistance implements CostCalculator {
 	GetCost(p1: Place, p2: Place) {
-		var dLat: number = p1.Lat - p2.Lat;
-		var dLong: number = p1.Long - p2.Long;
+		let dLat: number = p1.Lat - p2.Lat;
+		let dLong: number = p1.Long - p2.Long;
 		return Math.sqrt((dLat * dLat) + (dLong * dLong));	
 	}
 }
@@ -32,8 +32,8 @@ export class LatCorrectedEuclideanDistance implements CostCalculator {
 		this.LongScale = planetRadius * DegToRad(1) * Math.cos(DegToRad(lat));
 	}
 	GetCost(p1: Place, p2: Place) {
-		var dLat: number = this.LatScale * (p1.Lat - p2.Lat);
-		var dLong: number = this.LongScale * (p1.Long - p2.Long);
+		let dLat: number = this.LatScale * (p1.Lat - p2.Lat);
+		let dLong: number = this.LongScale * (p1.Long - p2.Long);
 		return Math.sqrt((dLat * dLat) + (dLong * dLong));	
 	}
 }
@@ -53,17 +53,17 @@ export class HaversineDistance implements CostCalculator {
 	*/
 	GetCost(p1: Place, p2: Place) {
 
-		var dLat = DegToRad(p2.Lat - p1.Lat);
-		var dLon = DegToRad(p2.Long - p1.Long);
+		let dLat = DegToRad(p2.Lat - p1.Lat);
+		let dLon = DegToRad(p2.Long - p1.Long);
 
-		var lat1 = DegToRad(p1.Lat);
-		var lat2 = DegToRad(p2.Lat);
+		let lat1 = DegToRad(p1.Lat);
+		let lat2 = DegToRad(p2.Lat);
 
-		var sdLat = Math.sin(dLat / 2);
-		var sdLon = Math.sin(dLon / 2);
+		let sdLat = Math.sin(dLat / 2);
+		let sdLon = Math.sin(dLon / 2);
 
-		var a = sdLat * sdLat + sdLon * sdLon * Math.cos(lat1) * Math.cos(lat2); 
-		var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+		let a = sdLat * sdLat + sdLon * sdLon * Math.cos(lat1) * Math.cos(lat2); 
+		let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
 		return this.PlanetRadius * c;
 	}
 }

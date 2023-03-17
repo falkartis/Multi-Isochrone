@@ -15,7 +15,7 @@ export class GoogleMapsConnector implements MapConnector {
 
 	AddMarker(dest: Destination) {
 
-		var newlatLng: google.maps.LatLng = new google.maps.LatLng(dest.Place.Lat, dest.Place.Long);
+		let newlatLng: google.maps.LatLng = new google.maps.LatLng(dest.Place.Lat, dest.Place.Long);
 
 		new google.maps.Marker({
 			position: newlatLng,
@@ -25,9 +25,9 @@ export class GoogleMapsConnector implements MapConnector {
 
 		this.LatLngList.push(newlatLng);
 
-		var latlngbounds: google.maps.LatLngBounds = new google.maps.LatLngBounds();
+		let latlngbounds: google.maps.LatLngBounds = new google.maps.LatLngBounds();
 
-		for(var latLng of this.LatLngList)
+		for(let latLng of this.LatLngList)
 			latlngbounds.extend(latLng);
 
 		this.Map.setCenter(latlngbounds.getCenter());
@@ -36,9 +36,9 @@ export class GoogleMapsConnector implements MapConnector {
 
 	AddLabel(p: Place, cost: number) {
 
-		var newlatLng: google.maps.LatLng = new google.maps.LatLng(p.Lat, p.Long);
+		let newlatLng: google.maps.LatLng = new google.maps.LatLng(p.Lat, p.Long);
 
-		var mark = new google.maps.Marker({
+		let mark = new google.maps.Marker({
 			position: newlatLng,
 			label: { text: cost.toFixed(2) },
 			map: this.Map,
@@ -61,16 +61,16 @@ export class GoogleMapsConnector implements MapConnector {
 			strokeColor: "#411",
 			strokeOpacity: 0.6,
 			strokeWeight: 2,
-			//draggable: true,
+			draggable: true,
 		});
-		var toAdd = true;
+		let toAdd = true;
 		if (this.PolylineList.has(cost)) {
 
-			var PlList = this.PolylineList.get(cost) ?? []; // ?? [] is syntax shugar
+			let PlList = this.PolylineList.get(cost) ?? []; // ?? [] is syntax shugar
 			
 			for(let pl of PlList){
-				var path = pl.getPath();
-				var arr = path.getArray();
+				let path = pl.getPath();
+				let arr = path.getArray();
 				if (arr[0].equals(lineCoords[0])){				path.insertAt(0, lineCoords[1]);			toAdd = false; break; }
 				if (arr[0].equals(lineCoords[1])){				path.insertAt(0, lineCoords[0]);			toAdd = false; break; }
 				if (arr[arr.length - 1].equals(lineCoords[0])){	path.insertAt(arr.length, lineCoords[1]);	toAdd = false; break; }
@@ -82,7 +82,7 @@ export class GoogleMapsConnector implements MapConnector {
 			}
 
 		} else {
-			var list: google.maps.Polyline[] = [];
+			let list: google.maps.Polyline[] = [];
 			list.push(line);
 			this.PolylineList.set(cost, list);
 			if (!this.AddedLabels.has(cost)) {
@@ -106,10 +106,10 @@ export class GoogleMapsConnector implements MapConnector {
 	}
 
 	DrawRectangle(box: BoundingBox, color: string) {
-		var north: number = box.Max.Lat;
-		var south: number = box.Min.Lat;
-		var east: number = box.Max.Long;
-		var west: number = box.Min.Long;
+		let north: number = box.Max.Lat;
+		let south: number = box.Min.Lat;
+		let east: number = box.Max.Long;
+		let west: number = box.Min.Long;
 
 		const rectangle = new google.maps.Rectangle({
 			strokeColor: color,
@@ -130,14 +130,14 @@ export class GoogleMapsConnector implements MapConnector {
 		this.DrawRectangle(box, "#211");
 	}
 	GetBoundingBox() {
-		var box: google.maps.LatLngBounds|undefined = this.Map.getBounds();
+		let box: google.maps.LatLngBounds|undefined = this.Map.getBounds();
 		if (box === undefined) {
 			console.log("Map.getBounds() returned undefined, can't build BoundingBox, returning 0,0.");
 			return new BoundingBox(new Place(0, 0))
 		}
-		var min = new Place(box.getSouthWest().lat(), box.getSouthWest().lng());
-		var max = new Place(box.getNorthEast().lat(), box.getNorthEast().lng());
-		var bb = new BoundingBox(min);
+		let min = new Place(box.getSouthWest().lat(), box.getSouthWest().lng());
+		let max = new Place(box.getNorthEast().lat(), box.getNorthEast().lng());
+		let bb = new BoundingBox(min);
 		// Using expand method instead of the constructor with min anb max becaus google may mess up in some cases.
 		bb.Expand(max);
 		return bb;

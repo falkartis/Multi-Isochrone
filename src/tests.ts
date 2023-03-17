@@ -44,16 +44,16 @@ form.onsubmit = () => {
 	const formData = new FormData(form);
 	console.log(formData);
 
-	var p = document.createElement('p');
+	let p = document.createElement('p');
 
-	var w: number = +formWheight.value;
-	var lat: number = +formLat.value;
-	var lng: number = +formLong.value;
+	let w: number = +formWheight.value;
+	let lat: number = +formLat.value;
+	let lng: number = +formLong.value;
 	p.innerHTML = "W:" + w + ", lat:" + lat + ", long:" + lng;
 	logTag.appendChild(p);
 
-	var pl: Place = new Place(lat, lng);
-	var dst: Destination = new Destination(pl, w);
+	let pl: Place = new Place(lat, lng);
+	let dst: Destination = new Destination(pl, w);
 	mapConn.AddMarker(dst);
 
 	return false; // prevent reload
@@ -71,16 +71,16 @@ let RedrawTimer: ReturnType<typeof setTimeout>;
 export class Tests {
 
 	public static testTotalCost() {
-		var places: Place[] = [new Place(1,0), new Place(0,1), new Place(-1,0), new Place(0,-1)];
-		var destinations: Destination[] = [
+		let places: Place[] = [new Place(1,0), new Place(0,1), new Place(-1,0), new Place(0,-1)];
+		let destinations: Destination[] = [
 			new Destination(places[0], 1),
 			new Destination(places[1], 2),
 			new Destination(places[2], 3),
 			new Destination(places[3], 4)
 		];
-		var dSet: DestinationSet= new DestinationSet(destinations);
-		var calc: EuclideanDistance = new EuclideanDistance();
-		var tCost: number = dSet.ComputeCostFrom(new Place(0,0), calc);
+		let dSet: DestinationSet= new DestinationSet(destinations);
+		let calc: EuclideanDistance = new EuclideanDistance();
+		let tCost: number = dSet.ComputeCostFrom(new Place(0,0), calc);
 		if (tCost == 10) {
 			console.log("10 is OK");
 		} else {
@@ -88,53 +88,53 @@ export class Tests {
 		}
 	}
 	public static testRealPlaces() {
-		var barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 1);
-		var paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 6);
-		var berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 2);
-		var zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 4);
-		var dSet: DestinationSet = new DestinationSet([barcelona, paris, berlin, zurich]);
-		var origin: Place = new Place(46.8730811, 3.2886396);
-		var costCalc: CostCalculator = new HaversineDistance();
+		let barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 1);
+		let paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 6);
+		let berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 2);
+		let zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 4);
+		let dSet: DestinationSet = new DestinationSet([barcelona, paris, berlin, zurich]);
+		let origin: Place = new Place(46.8730811, 3.2886396);
+		let costCalc: CostCalculator = new HaversineDistance();
 		console.log({barcelona, paris, berlin, zurich, dSet, origin, costCalc});
-		var tCost: number = dSet.ComputeCostFrom(origin, costCalc);
+		let tCost: number = dSet.ComputeCostFrom(origin, costCalc);
 		console.log("Total cost: " + tCost + "Km");
-		var centroid: Place = dSet.GetWheightedCentroid();
+		let centroid: Place = dSet.GetWheightedCentroid();
 		console.log(centroid);
-		var tCost2: number = dSet.ComputeCostFrom(centroid, costCalc);
+		let tCost2: number = dSet.ComputeCostFrom(centroid, costCalc);
 		console.log("Total cost: " + tCost2 + "Km");
 
 	}
 	public static testExplore() {
 		console.log("testExplore() start");
-		var paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 7);
-		var berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 7);
-		var barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 2);
-		var zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 3);
-		var dSet: DestinationSet = new DestinationSet([barcelona, paris, berlin, zurich]);
+		let paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 7);
+		let berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 7);
+		let barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 2);
+		let zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 3);
+		let dSet: DestinationSet = new DestinationSet([barcelona, paris, berlin, zurich]);
 		
-		//var box: BoundingBox = dSet.GetBoundingBox();
-		var box: BoundingBox = new BoundingBox(paris.Place);
+		//let box: BoundingBox = dSet.GetBoundingBox();
+		let box: BoundingBox = new BoundingBox(paris.Place);
 		box.Expand(zurich.Place);
 		box.ExpandBy(80);
 		box.ExpandLatBy(230);
 		box.ExpandLongBy(40);
 
-		var boxSize: number = Math.min(box.SizeLat, box.SizeLong);
+		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
-		var centroid: Destination = new Destination(dSet.GetWheightedCentroid(), 0);
+		let centroid: Destination = new Destination(dSet.GetWheightedCentroid(), 0);
 
-		var costCalc: CostCalculator = new HaversineDistance();
-		//var costCalc: CostCalculator = new LatCorrectedEuclideanDistance(centroid.Place.Lat);
-		var centroidCost: number = dSet.ComputeCostFrom(centroid.Place, costCalc);
+		let costCalc: CostCalculator = new HaversineDistance();
+		//let costCalc: CostCalculator = new LatCorrectedEuclideanDistance(centroid.Place.Lat);
+		let centroidCost: number = dSet.ComputeCostFrom(centroid.Place, costCalc);
 		mapConn.AddMarker(centroid);
 		console.log({centroidCost});
 
 		console.log("explore() start");
-		//var disc = new LnDiscretizer(0.1, centroidCost * 0.988);
-		//var disc = new LnDiscretizer(0.1, 8965.5);
-		var disc = new LnDiscretizer(0.6, 8965.55);
-		//var disc = new LinearDiscretizer(200, 0);
-		var explorer: Explorer = new Explorer(dSet, 200, boxSize/15, boxSize/50, costCalc, disc, mapConn);
+		//let disc = new LnDiscretizer(0.1, centroidCost * 0.988);
+		//let disc = new LnDiscretizer(0.1, 8965.5);
+		let disc = new LnDiscretizer(0.6, 8965.55);
+		//let disc = new LinearDiscretizer(200, 0);
+		let explorer: Explorer = new Explorer(dSet, 200, boxSize/15, boxSize/50, costCalc, disc, mapConn);
 
 		explorer.Explore(box);
 
@@ -148,7 +148,7 @@ export class Tests {
 
 		console.log("inside of AddRedraw()");
 	
-		var b = document.createElement('button');
+		let b = document.createElement('button');
 		b.innerHTML = "Redraw";
 
 		b.addEventListener('click', function(e){ Tests.Redraw(explorer); });
@@ -162,15 +162,16 @@ export class Tests {
 
 		clearTimeout(RedrawTimer);
 
-		setTimeout(()=>{
+		RedrawTimer = setTimeout(()=>{
 			console.time('Redraw');
 			mapConn.ClearLines();
-			var box: BoundingBox = mapConn.GetBoundingBox();
+			explorer.DestSet.ClearCostCache();
+			let box: BoundingBox = mapConn.GetBoundingBox();
 			box.ExpandBy(50);
-			var boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-			explorer.SetMaxSize(boxSize/6);
-			explorer.SetMinSize(boxSize/25);
-			explorer.Debug = true;
+			let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
+			explorer.SetMaxSize(boxSize/2);
+			explorer.SetMinSize(boxSize/80);
+			//explorer.Debug = true;
 			explorer.Explore(box);
 			console.timeEnd('Redraw')
 		}, 1000);

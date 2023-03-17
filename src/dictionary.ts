@@ -18,9 +18,9 @@ export class Dictionary<TKey extends HashCode, TValue> {
 			throw new Error("Dictionary already contains key!");
 		}
 		
-		var hc: number = key.GetHashCode();
-		var tuple: [TKey, TValue] = [key, value];
-		var list = this.Data.get(hc);
+		let hc: number = key.GetHashCode();
+		let tuple: [TKey, TValue] = [key, value];
+		let list = this.Data.get(hc);
 
 		if (list == undefined) {
 			list = [];
@@ -37,9 +37,9 @@ export class Dictionary<TKey extends HashCode, TValue> {
 		//TODO:
 	}
 	Get(key: TKey): TValue|undefined {
-		var hc: number = key.GetHashCode();
-		var list = this.Data.get(hc) ?? [];
-		var val: TValue|undefined = undefined;
+		let hc: number = key.GetHashCode();
+		let list = this.Data.get(hc) ?? [];
+		let val: TValue|undefined = undefined;
 		list.forEach(tuple => {
 			if (key.Equals(tuple[0])) {
 				val = tuple[1];
@@ -51,9 +51,9 @@ export class Dictionary<TKey extends HashCode, TValue> {
 		this.Data = new Map<number, [TKey, TValue][]>();
 	}
 	ContainsKey(key: TKey): boolean {
-		var hc: number = key.GetHashCode();
-		var list = this.Data.get(hc) ?? [];
-		var val: boolean = false;
+		let hc: number = key.GetHashCode();
+		let list = this.Data.get(hc) ?? [];
+		let val: boolean = false;
 		list.forEach(tuple => {
 			if (key.Equals(tuple[0])) {
 				val = true;

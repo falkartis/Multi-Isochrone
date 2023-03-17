@@ -34,8 +34,8 @@ export class Place implements HashCode {
 		return this.Scale(1 - t).Add(o.Scale(t));
 	}
 	GetHashCode() {
-		var la = 90 / this.Lat;
-		var lo = 180 / this.Long;
+		let la = 90 / this.Lat;
+		let lo = 180 / this.Long;
 		return la * 7919 + lo;
 	}
 	Equals(other: Place) {
@@ -63,13 +63,13 @@ export class DestinationSet {
 		this.CostCache.Clear();
 	}
 	ComputeCostFrom(origin: Place, calc: CostCalculator) {
-		var cached = this.CostCache.Get(origin);
+		let cached = this.CostCache.Get(origin);
 		if (cached != undefined)
 			return cached;
 
 		let totalCost: number = 0;
 		for (let destination of this.Destinations) {
-			var cost = destination.Wheight * calc.GetCost(origin, destination.Place);
+			let cost = destination.Wheight * calc.GetCost(origin, destination.Place);
 			totalCost += cost;
 		}
 		this.CostCache.Add(origin, totalCost);
@@ -78,7 +78,7 @@ export class DestinationSet {
 	GetBoundingBox() {
 		if (this.Destinations.length == 0)
 			return null;
-		var bb: BoundingBox = new BoundingBox(this.Destinations[0].Place);
+		let bb: BoundingBox = new BoundingBox(this.Destinations[0].Place);
 		// Yes the first one is repeated, should be fixed.
 		for (let dest of this.Destinations) {
 			bb.Expand(dest.Place);
@@ -86,9 +86,9 @@ export class DestinationSet {
 		return bb;
 	}
 	GetWheightedCentroid() {
-		var lats: number = 0;
-		var longs: number = 0;
-		var wheights: number = 0;
+		let lats: number = 0;
+		let longs: number = 0;
+		let wheights: number = 0;
 		for (let dest of this.Destinations) {
 			lats += dest.Place.Lat * dest.Wheight;
 			longs += dest.Place.Long * dest.Wheight;
@@ -127,7 +127,6 @@ export class BoundingBox {
 	get SizeLat() { return this.Max.Lat - this.Min.Lat; }
 	get SizeLong() { return this.Max.Long - this.Min.Long; }
 
-	//TODO: Make a grid function that gets 2 parameters, rows and cols, and returns a grid of places
 	//ChatGPT generated Grid method to be tested:
 	Grid(rows: number, cols: number): Place[][] {
 		const grid: Place[][] = [];
@@ -175,11 +174,11 @@ export class BoundingBox {
 		if (place.Long > this.Max.Long) { this.Max.Long = place.Long; }
 	}
 	ExpandBy(percent: number) {
-		var perOne: number = percent / 100;
-		var dLat: number = this.Max.Lat - this.Min.Lat;
-		var dLong: number = this.Max.Long - this.Min.Long;
-		var latInc: number = dLat * perOne;
-		var longInc: number = dLong * perOne;
+		let perOne: number = percent / 100;
+		let dLat: number = this.Max.Lat - this.Min.Lat;
+		let dLong: number = this.Max.Long - this.Min.Long;
+		let latInc: number = dLat * perOne;
+		let longInc: number = dLong * perOne;
 		this.Min.Lat = this.Min.Lat - (latInc / 2);
 		this.Max.Lat = this.Max.Lat + (latInc / 2);
 		this.Min.Long = this.Min.Long - (longInc / 2);
@@ -192,16 +191,16 @@ export class BoundingBox {
 		this.Max.Long += deg;
 	}
 	ExpandLatBy(percent: number) {
-		var perOne: number = percent / 100;
-		var dLat: number = this.Max.Lat - this.Min.Lat;
-		var latInc: number = dLat * perOne;
+		let perOne: number = percent / 100;
+		let dLat: number = this.Max.Lat - this.Min.Lat;
+		let latInc: number = dLat * perOne;
 		this.Min.Lat = this.Min.Lat - (latInc / 2);
 		this.Max.Lat = this.Max.Lat + (latInc / 2);
 	}
 	ExpandLongBy(percent: number) {
-		var perOne: number = percent / 100;
-		var dLong: number = this.Max.Long - this.Min.Long;
-		var longInc: number = dLong * perOne;
+		let perOne: number = percent / 100;
+		let dLong: number = this.Max.Long - this.Min.Long;
+		let longInc: number = dLong * perOne;
 		this.Min.Long = this.Min.Long - (longInc / 2);
 		this.Max.Long = this.Max.Long + (longInc / 2);
 	}
@@ -212,7 +211,7 @@ export class BoundingBox {
 
 
 function Interpolate(p1: Place, p2: Place, v1: number, v2: number) {
-	var t: number = v1 / (v1 - v2);
+	let t: number = v1 / (v1 - v2);
 	return p1.Lerp(t, p2);
 }
 
@@ -246,18 +245,18 @@ export class Explorer {
 
 	DrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place, c3: number, p4: Place, c4: number, qMin: number) {
 
-		var v1: number = c1 - qMin;
-		var v2: number = c2 - qMin;
-		var v3: number = c3 - qMin;
-		var v4: number = c4 - qMin;
-		var index: number = 0;
+		let v1: number = c1 - qMin;
+		let v2: number = c2 - qMin;
+		let v3: number = c3 - qMin;
+		let v4: number = c4 - qMin;
+		let index: number = 0;
 		index += 1 * (+(v1 > 0));
 		index += 2 * (+(v2 > 0));
 		index += 4 * (+(v3 > 0));
 		index += 8 * (+(v4 > 0));
 
-		var l1: Place|null = null;
-		var l2: Place|null = null;
+		let l1: Place|null = null;
+		let l2: Place|null = null;
 		switch (index) {
 			// CORNERS:
 			case 1:		case 14:	l1 = Interpolate(p1, p2, v1, v2);	l2 = Interpolate(p1, p4, v1, v4);	break;
@@ -295,16 +294,15 @@ export class Explorer {
 				c1: number, c2: number, c3: number, c4: number,
 				d1: number, d2: number, d3: number, d4: number) {
 
-		var vals = new Map<number, number>();
+		let vals = new Map<number, number>();
 		vals.set(d1, 1);
-		vals.set(d2, 1 + (vals.get(d2) ?? 0));
-		vals.set(d3, 1 + (vals.get(d3) ?? 0));
-		vals.set(d4, 1 + (vals.get(d4) ?? 0));
+		vals.set(d2, 1);
+		vals.set(d3, 1);
+		vals.set(d4, 1);
 
-		var max = Math.max(d1, d2, d3, d4);
-		var sortVals = Array.from(vals.keys());
+		let max = Math.max(d1, d2, d3, d4);
 
-		for (let cost of sortVals) {
+		for (let cost of vals.keys()) {
 			if (cost != max)
 				this.DrawLine(p1, c1, p2, c2, p3, c3, p4, c4, cost);
 		}
@@ -321,11 +319,11 @@ export class Explorer {
 			return;
 		}
 
-		var p: Place[] = [box.SW, box.NW, box.NE, box.SE, box.CW, box.NC, box.CE, box.SC, box.Center];
-		var c: number[] = p.map(place => this.ComputeCost(place));
-		var d: number[] = c.map(cost => this.Discretizer.Discretize(cost));
+		let p: Place[] = [box.SW, box.NW, box.NE, box.SE, box.CW, box.NC, box.CE, box.SC, box.Center];
+		let c: number[] = p.map(place => this.ComputeCost(place));
+		let d: number[] = c.map(cost => this.Discretizer.Discretize(cost));
 
-		var nineEqual = this.AllEqual(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8]);
+		let nineEqual = this.AllEqual(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8]);
 
 		if (nineEqual) {
 			if (this.Debug) this.Map.DrawRedRectangle(box, c[8]);
@@ -340,25 +338,9 @@ export class Explorer {
 
 		this.Divide(box);
 	}
-	// Divide(box: BoundingBox) {
-	// 	if (box.SizeLat > box.SizeLong) {
-	// 		var mid1 = Lerp(box.Min.Lat, box.Max.Lat, 0.45);
-	// 		var mid2 = Lerp(box.Min.Lat, box.Max.Lat, 0.55);
-	// 		var childBox1 = new BoundingBox(box.Min, new Place(mid1, box.Max.Long));
-	// 		var childBox2 = new BoundingBox(new Place(mid1, box.Min.Long), new Place(mid2, box.Max.Long));
-	// 		var childBox3 = new BoundingBox(new Place(mid2, box.Min.Long), box.Max);
-	// 		this.ExploreThem(childBox2, childBox1, childBox3); // Starting on purpose with the center one
-	// 	} else {
-	// 		var mid1 = Lerp(box.Min.Long, box.Max.Long, 0.45);
-	// 		var mid2 = Lerp(box.Min.Long, box.Max.Long, 0.55);
-	// 		var childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid1));
-	// 		var childBox2 = new BoundingBox(new Place(box.Min.Lat, mid1), new Place(box.Max.Lat, mid2));
-	// 		var childBox3 = new BoundingBox(new Place(box.Min.Lat, mid2), box.Max);
-	// 		this.ExploreThem(childBox2, childBox1, childBox3); // Starting on purpose with the center one
-	// 	}
-	// }
+
 	Divide(box: BoundingBox) {
-		var childBoxes: BoundingBox[];
+		let childBoxes: BoundingBox[];
 		if (box.SizeLat > box.SizeLong) {
 			childBoxes = box.BoxGrid(3, 1);
 		} else {
@@ -366,8 +348,6 @@ export class Explorer {
 		}
 		this.ExploreThem(childBoxes[1], childBoxes[0], childBoxes[2]);
 	}
-
-
 
 	ExploreThem(...boxes: BoundingBox[]) {
 		for (let box of boxes) {
