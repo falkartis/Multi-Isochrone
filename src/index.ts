@@ -18,6 +18,9 @@ export class Place implements HashCode {
 	Lat: number;
 	Long: number;
 	constructor(lat: number, long: number) {
+		if (isNaN(lat) || isNaN(long)) {
+			throw new Error('Invalid latitude or longitude');
+		}
 		this.Lat = lat;
 		this.Long = long;
 	}
@@ -125,6 +128,45 @@ export class BoundingBox {
 	get SizeLong() { return this.Max.Long - this.Min.Long; }
 
 	//TODO: Make a grid function that gets 2 parameters, rows and cols, and returns a grid of places
+	//ChatGPT generated Grid method to be tested:
+	Grid(rows: number, cols: number): Place[][] {
+		const grid: Place[][] = [];
+		const dLat = this.SizeLat / (rows - 1);
+		const dLong = this.SizeLong / (cols - 1);
+
+		for (let i = 0; i < rows; i++) {
+			const row = [];
+
+			for (let j = 0; j < cols; j++) {
+				const lat = this.Min.Lat + dLat * i;
+				const long = this.Min.Long + dLong * j;
+				row.push(new Place(lat, long));
+			}
+
+			grid.push(row);
+		}
+
+		return grid;
+	}
+	//ChatGPT generated BoxGrid method to be tested:
+	BoxGrid(rows: number, cols: number): BoundingBox[] {
+		const grid: BoundingBox[] = [];
+		const dLat = this.SizeLat / rows;
+		const dLong = this.SizeLong / cols;
+
+		for (let i = 0; i < rows; i++) {
+			for (let j = 0; j < cols; j++) {
+				const lat1 = this.Min.Lat + dLat * i;
+				const lat2 = this.Min.Lat + dLat * (i + 1);
+				const long1 = this.Min.Long + dLong * j;
+				const long2 = this.Min.Long + dLong * (j + 1);
+
+				grid.push(new BoundingBox(new Place(lat1, long1), new Place(lat2, long2)));
+			}
+		}
+
+		return grid;
+	}
 
 	Expand(place: Place) {
 		if (place.Lat < this.Min.Lat) { this.Min.Lat = place.Lat; }
@@ -183,6 +225,7 @@ export class Explorer {
 	MaxSize: number;
 	MinSize: number;
 	Map: MapConnector;
+	Debug: boolean = false;
 
 	constructor(dSet: DestinationSet, bandSize: number, maxsize: number, minsize: number, costCalc?: CostCalculator, disc?: Discretizer, map?: MapConnector) {
 		this.DestSet = dSet;
@@ -230,11 +273,11 @@ export class Explorer {
 			// ALL EQUAL, SOLID COLOR, (Case handled somewhere else):
 			case 0:
 			case 15:
-				console.log("Why am I here?");
+				if (this.Debug) console.log("Why am I here?");
 				break;
 		}
 		if (l1 == null || l2 == null) {
-			console.log({v1, v2, v3, v4, qMin, index});
+			if (this.Debug) console.log({v1, v2, v3, v4, qMin, index});
 		} else {
 			this.Map.AddLine(l1, l2, qMin);
 		}
@@ -267,63 +310,65 @@ export class Explorer {
 		}
 	}
 
+	ComputeCost(p: Place) {
+		return this.DestSet.ComputeCostFrom(p, this.CostCalculator);
+	}
+
 	Explore(box: BoundingBox) {
 
-		var p1: Place = box.SW;
-		var p2: Place = box.NW;
-		var p3: Place = box.NE;
-		var p4: Place = box.SE;
-		var p5: Place = box.CW;
-		var p6: Place = box.NC;
-		var p7: Place = box.CE;
-		var p8: Place = box.SC;
-		var p9: Place = box.Center;
-		var c1: number = this.DestSet.ComputeCostFrom(p1, this.CostCalculator);
-		var c2: number = this.DestSet.ComputeCostFrom(p2, this.CostCalculator);
-		var c3: number = this.DestSet.ComputeCostFrom(p3, this.CostCalculator);
-		var c4: number = this.DestSet.ComputeCostFrom(p4, this.CostCalculator);
-		var c5: number = this.DestSet.ComputeCostFrom(p5, this.CostCalculator);
-		var d1: number = this.Discretizer.Discretize(c1);
-		var d2: number = this.Discretizer.Discretize(c2);
-		var d3: number = this.Discretizer.Discretize(c3);
-		var d4: number = this.Discretizer.Discretize(c4);
-		var d5: number = this.Discretizer.Discretize(c5);
-
-		var dLat: number = box.Max.Lat - box.Min.Lat;
-		var dLon: number = box.Max.Long - box.Min.Long;
-
-		var allEqual = this.AllEqual(d1, d2, d3, d4, d5);
-
-		if (dLat < this.MaxSize && dLon < this.MaxSize && allEqual) {
-			//this.Map.DrawRedRectangle(box, c5);
+		if (box.SizeLat > this.MaxSize || box.SizeLong > this.MaxSize) {
+			this.Divide(box);
 			return;
 		}
 
-		// TODO: if only d5 is different we also have to recurse.
+		var p: Place[] = [box.SW, box.NW, box.NE, box.SE, box.CW, box.NC, box.CE, box.SC, box.Center];
+		var c: number[] = p.map(place => this.ComputeCost(place));
+		var d: number[] = c.map(cost => this.Discretizer.Discretize(cost));
 
-		if (dLat < this.MinSize && dLon < this.MinSize) {
+		var nineEqual = this.AllEqual(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8]);
 
-			//this.Map.DrawDarkRectangle(box);
-			this.FindLines(p1, p2, p3, p4, c1, c2, c3, c4, d1, d2, d3, d4);
+		if (nineEqual) {
+			if (this.Debug) this.Map.DrawRedRectangle(box, c[8]);
 			return;
 		}
 
-		if (dLat > dLon) {
-			var mid1 = Lerp(box.Min.Lat, box.Max.Lat, 0.45);
-			var mid2 = Lerp(box.Min.Lat, box.Max.Lat, 0.55);
-			var childBox1 = new BoundingBox(box.Min, new Place(mid1, box.Max.Long));
-			var childBox2 = new BoundingBox(new Place(mid1, box.Min.Long), new Place(mid2, box.Max.Long));
-			var childBox3 = new BoundingBox(new Place(mid2, box.Min.Long), box.Max);
-			this.ExploreThem(childBox2, childBox1, childBox3); // Starting on purpose with the center one
-		} else {
-			var mid1 = Lerp(box.Min.Long, box.Max.Long, 0.45);
-			var mid2 = Lerp(box.Min.Long, box.Max.Long, 0.55);
-			var childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid1));
-			var childBox2 = new BoundingBox(new Place(box.Min.Lat, mid1), new Place(box.Max.Lat, mid2));
-			var childBox3 = new BoundingBox(new Place(box.Min.Lat, mid2), box.Max);
-			this.ExploreThem(childBox2, childBox1, childBox3); // Starting on purpose with the center one
+		if (box.SizeLat < this.MinSize && box.SizeLong < this.MinSize) {
+			if (this.Debug) this.Map.DrawDarkRectangle(box);
+			this.FindLines(p[0], p[1], p[2], p[3], c[0], c[1], c[2], c[3], d[0], d[1], d[2], d[3]);
+			return;
 		}
+
+		this.Divide(box);
 	}
+	// Divide(box: BoundingBox) {
+	// 	if (box.SizeLat > box.SizeLong) {
+	// 		var mid1 = Lerp(box.Min.Lat, box.Max.Lat, 0.45);
+	// 		var mid2 = Lerp(box.Min.Lat, box.Max.Lat, 0.55);
+	// 		var childBox1 = new BoundingBox(box.Min, new Place(mid1, box.Max.Long));
+	// 		var childBox2 = new BoundingBox(new Place(mid1, box.Min.Long), new Place(mid2, box.Max.Long));
+	// 		var childBox3 = new BoundingBox(new Place(mid2, box.Min.Long), box.Max);
+	// 		this.ExploreThem(childBox2, childBox1, childBox3); // Starting on purpose with the center one
+	// 	} else {
+	// 		var mid1 = Lerp(box.Min.Long, box.Max.Long, 0.45);
+	// 		var mid2 = Lerp(box.Min.Long, box.Max.Long, 0.55);
+	// 		var childBox1 = new BoundingBox(box.Min, new Place(box.Max.Lat, mid1));
+	// 		var childBox2 = new BoundingBox(new Place(box.Min.Lat, mid1), new Place(box.Max.Lat, mid2));
+	// 		var childBox3 = new BoundingBox(new Place(box.Min.Lat, mid2), box.Max);
+	// 		this.ExploreThem(childBox2, childBox1, childBox3); // Starting on purpose with the center one
+	// 	}
+	// }
+	Divide(box: BoundingBox) {
+		var childBoxes: BoundingBox[];
+		if (box.SizeLat > box.SizeLong) {
+			childBoxes = box.BoxGrid(3, 1);
+		} else {
+			childBoxes = box.BoxGrid(1, 3);
+		}
+		this.ExploreThem(childBoxes[1], childBoxes[0], childBoxes[2]);
+	}
+
+
+
 	ExploreThem(...boxes: BoundingBox[]) {
 		for (let box of boxes) {
 			this.Explore(box);

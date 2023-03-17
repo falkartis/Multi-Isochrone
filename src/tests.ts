@@ -166,10 +166,11 @@ export class Tests {
 			console.time('Redraw');
 			mapConn.ClearLines();
 			var box: BoundingBox = mapConn.GetBoundingBox();
-			box.ExpandBy(15);
+			box.ExpandBy(50);
 			var boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-			explorer.SetMaxSize(boxSize/8);
-			explorer.SetMinSize(boxSize/50);
+			explorer.SetMaxSize(boxSize/6);
+			explorer.SetMinSize(boxSize/25);
+			explorer.Debug = true;
 			explorer.Explore(box);
 			console.timeEnd('Redraw')
 		}, 1000);
