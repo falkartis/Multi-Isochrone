@@ -17,7 +17,7 @@ body {
 }
 
 input {
-	width: 40px;
+	width: 60px;
 }
 #sideBar {
 /*	display: none;*/
@@ -33,4 +33,10 @@ input {
 }
 #log p {
 	margin: 0;
+}
+#topBar {
+	height: 50px;
+}
+#map {
+	height: calc(100% - 50px);
 }

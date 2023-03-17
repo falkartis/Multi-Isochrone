@@ -22,10 +22,6 @@ class Program {
 		if (mapdiv == null) {
 			throw new Error('No div with id map found.');
 		}
-		let topBar = document.getElementById("topBar");
-		if (topBar == null) {
-			throw new Error('No div with id topBar found.');
-		}
 
 		let map = new google.maps.Map(mapdiv, {
 			zoom: 2,
@@ -41,6 +37,30 @@ class Program {
 		this.DiscretizerOffset = 0;
 		this.DiscretizerStep = 0.5;
 		this.Markers = [];
+
+		this.TopBarIcons();
+	}
+
+	TopBarIcons() {
+		let topBar = document.getElementById("topBar");
+		if (topBar == null) {
+			throw new Error('No div with id topBar found.');
+		}
+
+		let discStepInput = document.createElement('input');
+		discStepInput.type = "number";
+		discStepInput.value = "" + this.DiscretizerStep;
+		discStepInput.step = "0.01";
+		discStepInput.onchange = (e) => {
+			const target = e.target as HTMLInputElement;
+			let newval = +target.value;
+			if (newval > 0) {
+				this.DiscretizerStep = newval;
+				this.Redraw();
+			}
+		};
+		topBar.appendChild(discStepInput);
+
 	}
 
 	placeMarker(latLng: google.maps.LatLng, map: google.maps.Map) {
@@ -73,8 +93,8 @@ class Program {
 
 		let div = document.createElement('div');
 		let info = document.createElement('label');
-		let input = document.createElement('input');
 		let del = document.createElement('button');
+		let input = document.createElement('input');
 
 		input.type = "number";
 		input.value = this.getMarkerLabel(marker);
@@ -88,18 +108,23 @@ class Program {
 
 		del.innerHTML = "delete";
 		del.style.float = "right";
-		del.addEventListener('click', function(){ marker.setMap(null); });
+		del.addEventListener('click', () => {
+			marker.setMap(null);
+			this.Redraw();
+		});
 
 		div.appendChild(info);
 		div.appendChild(del);
 
-		const infowindow = new google.maps.InfoWindow({
-			content: div,
-		});
+		const infowindow = new google.maps.InfoWindow({ content: div });
 		infowindow.open(marker.getMap(), marker);
+		infowindow.addListener('closeclick', () => this.Redraw());
 	}
 
 	GetDestinations(): Destination[] {
+
+		this.Markers = this.Markers.filter((marker) => marker.getMap());
+
 		let dests: Destination[] = [];
 		for (let marker of this.Markers) {
 			let wheight: number = +this.getMarkerLabel(marker);
