@@ -1,9 +1,8 @@
 import { CostCalculator, EuclideanDistance, HaversineDistance } from './CostCalculator.js'
-import { Discretizer, LinearDiscretizer } from './Discretizer.js'
 import { MapConnector, ConsoleLogConnector } from './MapConnector.js'
+import { Discretizer, LinearDiscretizer } from './Discretizer.js'
 import { HashCode, Dictionary } from './Dictionary.js'
-
-
+import { DestinationSet } from './DestinationSet.js'
 
 
 export function DegToRad(degrees: number) {
@@ -49,53 +48,6 @@ export class Destination {
 	constructor(place: Place, wheight: number) {
 		this.Place = place;
 		this.Wheight = wheight;
-	}
-}
-
-export class DestinationSet {
-	Destinations: Destination[];
-	CostCache: Dictionary<Place, number>;
-	constructor(destinations: Destination[]) {
-		this.Destinations = destinations;
-		this.CostCache = new Dictionary<Place, number>();
-	}
-	ClearCostCache() {
-		this.CostCache.Clear();
-	}
-	ComputeCostFrom(origin: Place, calc: CostCalculator) {
-		let cached = this.CostCache.Get(origin);
-		if (cached != undefined)
-			return cached;
-
-		let totalCost: number = 0;
-		for (let destination of this.Destinations) {
-			let cost = destination.Wheight * calc.GetCost(origin, destination.Place);
-			totalCost += cost;
-		}
-		this.CostCache.Add(origin, totalCost);
-		return totalCost;
-	}
-	GetBoundingBox() {
-		if (this.Destinations.length == 0)
-			return null;
-		let bb: BoundingBox = new BoundingBox(this.Destinations[0].Place);
-		// Yes the first one is repeated, should be fixed.
-		for (let dest of this.Destinations) {
-			bb.Expand(dest.Place);
-		}
-		return bb;
-	}
-	GetWheightedCentroid() {
-		let lats: number = 0;
-		let longs: number = 0;
-		let wheights: number = 0;
-		for (let dest of this.Destinations) {
-			lats += dest.Place.Lat * dest.Wheight;
-			longs += dest.Place.Long * dest.Wheight;
-			wheights += dest.Wheight;
-		}
-		//console.log({lats, longs, wheights});
-		return new Place(lats / wheights, longs / wheights);
 	}
 }
 

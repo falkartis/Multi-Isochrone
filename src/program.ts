@@ -1,5 +1,6 @@
-import { BoundingBox, Explorer, Place, Destination, DestinationSet } from './index.js';
-import { CostCalculator, HaversineDistance } from './CostCalculator.js'
+import { DestinationSet, AllDestinations, AnyDestination } from './DestinationSet.js'
+import { CostCalculator, HaversineDistance } from './CostCalculator.js';
+import { BoundingBox, Explorer, Place, Destination } from './index.js';
 import { GoogleMapsConnector } from './GoogleMapsConnector.js'
 import { LnDiscretizer } from './Discretizer.js'
 
@@ -110,6 +111,7 @@ class Program {
 		del.style.float = "right";
 		del.addEventListener('click', () => {
 			marker.setMap(null);
+			this.CleanMarkers();
 			this.Redraw();
 		});
 
@@ -121,9 +123,11 @@ class Program {
 		infowindow.addListener('closeclick', () => this.Redraw());
 	}
 
-	GetDestinations(): Destination[] {
-
+	CleanMarkers(): void {
 		this.Markers = this.Markers.filter((marker) => marker.getMap());
+	}
+
+	GetDestinations(): Destination[] {
 
 		let dests: Destination[] = [];
 		for (let marker of this.Markers) {
@@ -143,7 +147,8 @@ class Program {
 		}
 
 		let costCalc: CostCalculator = new HaversineDistance();
-		let dset: DestinationSet = new DestinationSet(destinations);
+		//let dset: DestinationSet = new AllDestinations(destinations);
+		let dset: DestinationSet = new AnyDestination(destinations);
 		let box: BoundingBox = this.MapConnector.GetBoundingBox();
 		box.ExpandBy(50);
 		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
@@ -161,7 +166,7 @@ class Program {
 			let box: BoundingBox = this.MapConnector.GetBoundingBox();
 			box.ExpandBy(50);
 			let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-			explorer.SetMaxSize(boxSize/2);
+			explorer.SetMaxSize(boxSize/10);
 			explorer.SetMinSize(boxSize/80);
 			//explorer.Debug = true;
 			explorer.Explore(box);

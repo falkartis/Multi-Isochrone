@@ -1,6 +1,7 @@
 import { CostCalculator, EuclideanDistance, HaversineDistance, LatCorrectedEuclideanDistance } from './CostCalculator.js'
-import { Explorer, BoundingBox, DestinationSet, Place, Destination } from './index.js';
 import { LinearDiscretizer, LnDiscretizer, LogDiscretizer } from './Discretizer.js'
+import { Explorer, BoundingBox, Place, Destination } from './index.js';
+import { DestinationSet, AllDestinations } from './DestinationSet.js'
 import { GoogleMapsConnector } from './GoogleMapsConnector.js'
 import { MapConnector } from './MapConnector.js'
 
@@ -78,7 +79,7 @@ export class Tests {
 			new Destination(places[2], 3),
 			new Destination(places[3], 4)
 		];
-		let dSet: DestinationSet= new DestinationSet(destinations);
+		let dSet: DestinationSet= new AllDestinations(destinations);
 		let calc: EuclideanDistance = new EuclideanDistance();
 		let tCost: number = dSet.ComputeCostFrom(new Place(0,0), calc);
 		if (tCost == 10) {
@@ -92,7 +93,7 @@ export class Tests {
 		let paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 6);
 		let berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 2);
 		let zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 4);
-		let dSet: DestinationSet = new DestinationSet([barcelona, paris, berlin, zurich]);
+		let dSet: DestinationSet = new AllDestinations([barcelona, paris, berlin, zurich]);
 		let origin: Place = new Place(46.8730811, 3.2886396);
 		let costCalc: CostCalculator = new HaversineDistance();
 		console.log({barcelona, paris, berlin, zurich, dSet, origin, costCalc});
@@ -110,7 +111,7 @@ export class Tests {
 		let berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 7);
 		let barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 2);
 		let zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 3);
-		let dSet: DestinationSet = new DestinationSet([barcelona, paris, berlin, zurich]);
+		let dSet: DestinationSet = new AllDestinations([barcelona, paris, berlin, zurich]);
 		
 		//let box: BoundingBox = dSet.GetBoundingBox();
 		let box: BoundingBox = new BoundingBox(paris.Place);
