@@ -31,16 +31,6 @@ export class AllDestinations implements DestinationSet {
 		this.CostCache.Add(origin, totalCost);
 		return totalCost;
 	}
-	GetBoundingBox() {
-		if (this.Destinations.length == 0)
-			return null;
-		let bb: BoundingBox = new BoundingBox(this.Destinations[0].Place);
-		// Yes the first one is repeated, should be fixed.
-		for (let dest of this.Destinations) {
-			bb.Expand(dest.Place);
-		}
-		return bb;
-	}
 	GetWheightedCentroid() {
 		let lats: number = 0;
 		let longs: number = 0;
@@ -53,6 +43,7 @@ export class AllDestinations implements DestinationSet {
 		return new Place(lats / wheights, longs / wheights);
 	}
 }
+
 export class AnyDestination implements DestinationSet {
 	Destinations: Destination[];
 	CostCache: Dictionary<Place, number>;
@@ -77,16 +68,6 @@ export class AnyDestination implements DestinationSet {
 		this.CostCache.Add(origin, lowestCost);
 		return lowestCost;
 	}
-	GetBoundingBox() {
-		if (this.Destinations.length == 0)
-			return null;
-		let bb: BoundingBox = new BoundingBox(this.Destinations[0].Place);
-		// Yes the first one is repeated, should be fixed.
-		for (let dest of this.Destinations) {
-			bb.Expand(dest.Place);
-		}
-		return bb;
-	}
 	GetWheightedCentroid() {
 		let lats: number = 0;
 		let longs: number = 0;
@@ -95,6 +76,92 @@ export class AnyDestination implements DestinationSet {
 			lats += dest.Place.Lat * dest.Wheight;
 			longs += dest.Place.Long * dest.Wheight;
 			wheights += dest.Wheight;
+		}
+		return new Place(lats / wheights, longs / wheights);
+	}
+}
+
+export class AllDestGroup implements DestinationSet {
+	ChildSets: DestinationSet[];
+	CostCache: Dictionary<Place, number>;
+
+	constructor(childSets: DestinationSet[]) {
+		this.ChildSets = childSets;
+		this.CostCache = new Dictionary<Place, number>();
+	}
+
+	ComputeCostFrom(origin: Place, calc: CostCalculator): number {
+		let cached = this.CostCache.Get(origin);
+		if (cached != undefined)
+			return cached;
+
+		let totalCost: number = 0;
+		for (let child of this.ChildSets) {
+			let cost = child.ComputeCostFrom(origin, calc);
+			totalCost += cost;
+		}
+		this.CostCache.Add(origin, totalCost);
+		return totalCost;
+	}
+	ClearCostCache(): void {
+		this.CostCache.Clear();
+		for (let child of this.ChildSets) {
+			child.ClearCostCache();
+		}		
+	}
+	GetWheightedCentroid(): Place {
+		let lats: number = 0;
+		let longs: number = 0;
+		let wheights: number = 0;
+		for (let child of this.ChildSets) {
+			let place = child.GetWheightedCentroid();
+			lats += place.Lat;
+			longs += place.Long;
+			wheights += 1;
+		}
+		return new Place(lats / wheights, longs / wheights);
+	}
+}
+
+export class AnyDestGroup implements DestinationSet {
+	ChildSets: DestinationSet[];
+	CostCache: Dictionary<Place, number>;
+
+	constructor(childSets: DestinationSet[]) {
+		this.ChildSets = childSets;
+		this.CostCache = new Dictionary<Place, number>();
+	}
+
+	ComputeCostFrom(origin: Place, calc: CostCalculator): number {
+		let cached = this.CostCache.Get(origin);
+		if (cached != undefined)
+			return cached;
+
+		let lowestCost: number = Number.POSITIVE_INFINITY;
+		for (let child of this.ChildSets) {
+			let cost = child.ComputeCostFrom(origin, calc);
+			if (cost < lowestCost)
+				lowestCost = cost;
+		}
+
+		this.CostCache.Add(origin, lowestCost);
+		return lowestCost;
+	}
+	ClearCostCache(): void {
+		this.CostCache.Clear();
+		for (let child of this.ChildSets) {
+			child.ClearCostCache();
+		}		
+	}
+	GetWheightedCentroid(): Place {
+		let lats: number = 0;
+		let longs: number = 0;
+		let wheights: number = 0;
+		for (let child of this.ChildSets) {
+			let place = child.GetWheightedCentroid();
+			lats += place.Lat;
+			longs += place.Long;
+			wheights += 1;
 		}
 		return new Place(lats / wheights, longs / wheights);
 	}
