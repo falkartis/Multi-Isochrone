@@ -42,6 +42,7 @@ export class GoogleMapsConnector implements MapConnector {
 			position: newlatLng,
 			label: { text: cost.toFixed(2) },
 			map: this.Map,
+			// Shortest possible transparent pixel:
 			icon: { url: "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" }
 		});
 		this.AddedLabels.set(cost, mark);

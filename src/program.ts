@@ -1,4 +1,4 @@
-import { DestinationSet, AllDestinations, AnyDestination } from './DestinationSet.js'
+import { DestinationSet, AllDestinations, AnyDestination, AllDestGroup, AnyDestGroup } from './DestinationSet.js'
 import { CostCalculator, HaversineDistance } from './CostCalculator.js';
 import { BoundingBox, Explorer, Place, Destination } from './index.js';
 import { GoogleMapsConnector } from './GoogleMapsConnector.js'
@@ -36,13 +36,13 @@ class Program {
 		this.RedrawTimer = setTimeout(()=>{ console.log("RedrawTimer"); }, 1);
 		this.MapConnector = new GoogleMapsConnector(map);
 		this.DiscretizerOffset = 0;
-		this.DiscretizerStep = 0.5;
+		this.DiscretizerStep = 0.25;
 		this.Markers = [];
 
-		this.TopBarIcons();
+		this.ToolBar();
 	}
 
-	TopBarIcons() {
+	ToolBar() {
 		let topBar = document.getElementById("topBar");
 		if (topBar == null) {
 			throw new Error('No div with id topBar found.');
@@ -62,6 +62,55 @@ class Program {
 		};
 		topBar.appendChild(discStepInput);
 
+		let complexExample = document.createElement('button');
+		complexExample.innerHTML = 'Complex Example';
+		complexExample.addEventListener('click', () => {
+			this.ComplexExample();
+		});
+		topBar.appendChild(complexExample);
+	}
+
+	ComplexExample() {
+		console.log("ComplexExample start.")
+		/*
+		Paris:		48.8603237,	 2.3106225
+		London:		51.5287714,	-0.2420236
+		Berlin:		52.50697,	13.2843069
+		Rome:		41.9102411,	12.3955719
+		Barcelona:	41.3927754,	 2.0699778
+		Amsterdam:	52.3546527,	 4.8481785
+		*/
+		let paris =		new Destination(new Place(48.8603237,	 2.3106225),1);
+		let london =	new Destination(new Place(51.5287714,	-0.2420236),1);
+		let berlin =	new Destination(new Place(52.50697,		13.2843069),1);
+		let rome =		new Destination(new Place(41.9102411,	12.3955719),1);
+		let barcelona =	new Destination(new Place(41.3927754,	 2.0699778),1);
+		let amsterdam =	new Destination(new Place(52.3546527,	 4.8481785),1);
+
+		let cities = [paris, london, berlin, rome, barcelona, amsterdam];
+
+		let box: BoundingBox = new BoundingBox(paris.Place);
+		for (let city of cities) {
+			this.MapConnector.AddMarker(city);
+			box.Expand(city.Place);
+		}
+		box.ExpandBy(80);
+
+		let shuffled = cities.map(value => ({ value, r: Math.random() })).sort((a, b) => a.r - b.r).map(({ value }) => value);
+		let any1 = new AnyDestination([shuffled[0], shuffled[1]]);
+		let any2 = new AnyDestination([shuffled[2], shuffled[3]]);
+		let any3 = new AnyDestination([shuffled[4], shuffled[5]]);
+		let all = new AllDestGroup([any1, any2, any3]);
+
+		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
+
+		let disc = new LnDiscretizer(this.DiscretizerStep, this.DiscretizerOffset);
+		let costCalc: CostCalculator = new HaversineDistance();
+
+		let explorer: Explorer = new Explorer(all, boxSize/25, boxSize/50, disc, costCalc, this.MapConnector);
+		explorer.Explore(box);
+
+		console.log("ComplexExample end.")
 	}
 
 	placeMarker(latLng: google.maps.LatLng, map: google.maps.Map) {
@@ -146,14 +195,14 @@ class Program {
 			return;
 		}
 
-		let costCalc: CostCalculator = new HaversineDistance();
-		//let dset: DestinationSet = new AllDestinations(destinations);
-		let dset: DestinationSet = new AnyDestination(destinations);
+		let dset: DestinationSet = new AllDestinations(destinations);
+		//let dset: DestinationSet = new AnyDestination(destinations);
 		let box: BoundingBox = this.MapConnector.GetBoundingBox();
 		box.ExpandBy(50);
 		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
 		let disc = new LnDiscretizer(this.DiscretizerStep, this.DiscretizerOffset);
+		let costCalc: CostCalculator = new HaversineDistance();
 
 		let explorer: Explorer = new Explorer(dset, boxSize/2, boxSize/80, disc, costCalc, this.MapConnector);
 
