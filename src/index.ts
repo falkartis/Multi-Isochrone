@@ -2,7 +2,7 @@ import { CostCalculator, EuclideanDistance, HaversineDistance } from './CostCalc
 import { MapConnector, ConsoleLogConnector } from './MapConnector.js'
 import { Discretizer, LinearDiscretizer } from './Discretizer.js'
 import { HashCode, Dictionary } from './Dictionary.js'
-import { DestinationSet } from './DestinationSet.js'
+import { IDestination } from './DestinationSet.js'
 
 
 export function DegToRad(degrees: number) {
@@ -42,12 +42,23 @@ export class Place implements HashCode {
 	}
 }
 
-export class Destination {
-	Place: Place;
-	Wheight: number;
-	constructor(place: Place, wheight: number) {
-		this.Place = place;
-		this.Wheight = wheight;
+export class WeightedPlace extends Place implements IDestination {
+	Weight: number;
+	Name: string;
+
+	constructor(latitude: number, longitude: number, weight: number, name?: string) {
+		super(latitude, longitude);
+		this.Name = name ?? "";
+		this.Weight = weight;
+	}
+	ComputeCostFrom(origin: Place, calc: CostCalculator): number {
+		return calc.GetCost(origin, this);
+	}
+	ClearCostCache(): void {
+		// Nothing to do here since we don't store costs on this class.
+	}
+	GetCentroid(): Place {
+		return new Place(this.Lat, this.Long);
 	}
 }
 
@@ -168,7 +179,7 @@ function Interpolate(p1: Place, p2: Place, v1: number, v2: number) {
 
 
 export class Explorer {
-	DestSet: DestinationSet;
+	DestSet: IDestination;
 	CostCalculator: CostCalculator;
 	Discretizer: Discretizer;
 	MaxSize: number;
@@ -176,7 +187,7 @@ export class Explorer {
 	Map: MapConnector;
 	Debug: boolean = false;
 
-	constructor(dSet: DestinationSet, maxsize: number, minsize: number, disc: Discretizer, costCalc?: CostCalculator, map?: MapConnector) {
+	constructor(dSet: IDestination, maxsize: number, minsize: number, disc: Discretizer, costCalc?: CostCalculator, map?: MapConnector) {
 		this.DestSet = dSet;
 		this.MaxSize = maxsize;
 		this.MinSize = minsize;

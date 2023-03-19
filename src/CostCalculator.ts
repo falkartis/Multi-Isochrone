@@ -2,10 +2,13 @@ import { DegToRad, Place } from './index.js';
 
 export interface CostCalculator {
 	GetCost(p1: Place, p2: Place): number;
+	get Units(): string;
 }
 
 class TaxicabDistance implements CostCalculator {
 	// TODO: Implement rotation, try to do as much as possible in the constructor.
+	// TODO: Get the right units.
+	get Units(): string { return ""; }
 	GetCost(p1: Place, p2: Place) {
 		let dLat: number = Math.abs(p1.Lat - p2.Lat);
 		let dLong: number = Math.abs(p1.Long - p2.Long);
@@ -14,6 +17,8 @@ class TaxicabDistance implements CostCalculator {
 }
 
 export class EuclideanDistance implements CostCalculator {
+	// TODO: Get the right units, maybe from constructor.
+	get Units(): string { return ""; }
 	GetCost(p1: Place, p2: Place) {
 		let dLat: number = p1.Lat - p2.Lat;
 		let dLong: number = p1.Long - p2.Long;
@@ -31,6 +36,7 @@ export class LatCorrectedEuclideanDistance implements CostCalculator {
 		this.LatScale = planetRadius * DegToRad(1);
 		this.LongScale = planetRadius * DegToRad(1) * Math.cos(DegToRad(lat));
 	}
+	get Units(): string { return "Km"; }
 	GetCost(p1: Place, p2: Place) {
 		let dLat: number = this.LatScale * (p1.Lat - p2.Lat);
 		let dLong: number = this.LongScale * (p1.Long - p2.Long);
@@ -47,6 +53,7 @@ export class HaversineDistance implements CostCalculator {
 			this.PlanetRadius = planetRadius;
 		}
 	}
+	get Units(): string { return "Km"; }
 	/*
 	 *	https://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
 	 *	http://www.movable-type.co.uk/scripts/latlong.html

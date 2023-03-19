@@ -1,7 +1,7 @@
 import { CostCalculator, EuclideanDistance, HaversineDistance, LatCorrectedEuclideanDistance } from './CostCalculator.js'
 import { LinearDiscretizer, LnDiscretizer, LogDiscretizer } from './Discretizer.js'
-import { Explorer, BoundingBox, Place, Destination } from './index.js';
-import { DestinationSet, AllDestinations } from './DestinationSet.js'
+import { Explorer, BoundingBox, Place, WeightedPlace } from './index.js';
+import { IDestination, AllDestinations } from './DestinationSet.js'
 import { GoogleMapsConnector } from './GoogleMapsConnector.js'
 import { MapConnector } from './MapConnector.js'
 
@@ -53,8 +53,7 @@ form.onsubmit = () => {
 	p.innerHTML = "W:" + w + ", lat:" + lat + ", long:" + lng;
 	logTag.appendChild(p);
 
-	let pl: Place = new Place(lat, lng);
-	let dst: Destination = new Destination(pl, w);
+	let dst: WeightedPlace = new WeightedPlace(lat, lng, w);
 	mapConn.AddMarker(dst);
 
 	return false; // prevent reload
@@ -72,14 +71,13 @@ let RedrawTimer: ReturnType<typeof setTimeout>;
 export class Tests {
 
 	public static testTotalCost() {
-		let places: Place[] = [new Place(1,0), new Place(0,1), new Place(-1,0), new Place(0,-1)];
-		let destinations: Destination[] = [
-			new Destination(places[0], 1),
-			new Destination(places[1], 2),
-			new Destination(places[2], 3),
-			new Destination(places[3], 4)
+		let destinations: WeightedPlace[] = [
+			new WeightedPlace(1, 0, 1),
+			new WeightedPlace(0, 1, 2),
+			new WeightedPlace(-1, 0, 3),
+			new WeightedPlace(0, -1, 4)
 		];
-		let dSet: DestinationSet= new AllDestinations(destinations);
+		let dSet: IDestination = new AllDestinations(destinations);
 		let calc: EuclideanDistance = new EuclideanDistance();
 		let tCost: number = dSet.ComputeCostFrom(new Place(0,0), calc);
 		if (tCost == 10) {
@@ -89,17 +87,18 @@ export class Tests {
 		}
 	}
 	public static testRealPlaces() {
-		let barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 1);
-		let paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 6);
-		let berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 2);
-		let zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 4);
-		let dSet: DestinationSet = new AllDestinations([barcelona, paris, berlin, zurich]);
+		let barcelona:	WeightedPlace = new WeightedPlace(41.3927754,	 2.0699778, 1);
+		let paris:		WeightedPlace = new WeightedPlace(48.8589465,	 2.2768239, 6);
+		let berlin:		WeightedPlace = new WeightedPlace(52.50697,		13.2843069, 2);
+		let zurich:		WeightedPlace = new WeightedPlace(47.3774682,	 8.3930421, 4);
+		
+		let dSet: IDestination = new AllDestinations([barcelona, paris, berlin, zurich]);
 		let origin: Place = new Place(46.8730811, 3.2886396);
 		let costCalc: CostCalculator = new HaversineDistance();
 		console.log({barcelona, paris, berlin, zurich, dSet, origin, costCalc});
 		let tCost: number = dSet.ComputeCostFrom(origin, costCalc);
 		console.log("Total cost: " + tCost + "Km");
-		let centroid: Place = dSet.GetWheightedCentroid();
+		let centroid: Place = dSet.GetCentroid();
 		console.log(centroid);
 		let tCost2: number = dSet.ComputeCostFrom(centroid, costCalc);
 		console.log("Total cost: " + tCost2 + "Km");
@@ -107,27 +106,28 @@ export class Tests {
 	}
 	public static testExplore() {
 		console.log("testExplore() start");
-		let paris: Destination = new Destination(new Place(48.8589465, 2.2768239), 7);
-		let berlin: Destination = new Destination(new Place(52.50697, 13.2843069), 7);
-		let barcelona: Destination = new Destination(new Place(41.3927754, 2.0699778), 2);
-		let zurich: Destination = new Destination(new Place(47.3774682, 8.3930421), 3);
-		let dSet: DestinationSet = new AllDestinations([barcelona, paris, berlin, zurich]);
+		let paris:		WeightedPlace = new WeightedPlace(48.8589465,	 2.2768239, 7);
+		let berlin:		WeightedPlace = new WeightedPlace(52.50697,		13.2843069, 7);
+		let barcelona:	WeightedPlace = new WeightedPlace(41.3927754,	 2.0699778, 2);
+		let zurich:		WeightedPlace = new WeightedPlace(47.3774682,	 8.3930421, 3);
 		
+		let dSet: IDestination = new AllDestinations([barcelona, paris, berlin, zurich]);
 		//let box: BoundingBox = dSet.GetBoundingBox();
-		let box: BoundingBox = new BoundingBox(paris.Place);
-		box.Expand(zurich.Place);
+		let box: BoundingBox = new BoundingBox(paris);
+		box.Expand(zurich);
 		box.ExpandBy(80);
 		box.ExpandLatBy(230);
 		box.ExpandLongBy(40);
 
 		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
-		let centroid: Destination = new Destination(dSet.GetWheightedCentroid(), 0);
+		let centroidP = dSet.GetCentroid();
+		let centroidWP: WeightedPlace = new WeightedPlace(centroidP.Lat, centroidP.Long, 0);
 
 		let costCalc: CostCalculator = new HaversineDistance();
 		//let costCalc: CostCalculator = new LatCorrectedEuclideanDistance(centroid.Place.Lat);
-		let centroidCost: number = dSet.ComputeCostFrom(centroid.Place, costCalc);
-		mapConn.AddMarker(centroid);
+		let centroidCost: number = dSet.ComputeCostFrom(centroidP, costCalc);
+		mapConn.AddMarker(centroidWP);
 		console.log({centroidCost});
 
 		console.log("explore() start");

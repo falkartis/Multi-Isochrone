@@ -1,5 +1,6 @@
-import { Destination, BoundingBox, Place } from './index.js';
+import { BoundingBox, Place, WeightedPlace } from './index.js';
 import { MapConnector } from './MapConnector.js';
+
 
 export class GoogleMapsConnector implements MapConnector {
 
@@ -13,13 +14,13 @@ export class GoogleMapsConnector implements MapConnector {
 		this.Map = map
 	}
 
-	AddMarker(dest: Destination) {
+	AddMarker(dest: WeightedPlace) {
 
-		let newlatLng: google.maps.LatLng = new google.maps.LatLng(dest.Place.Lat, dest.Place.Long);
+		let newlatLng: google.maps.LatLng = new google.maps.LatLng(dest.Lat, dest.Long);
 
 		new google.maps.Marker({
 			position: newlatLng,
-			label: { text: "" + dest.Wheight + "" },
+			label: { text: "" + dest.Weight + "" },
 			map: this.Map
 		});
 

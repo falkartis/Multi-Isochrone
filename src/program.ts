@@ -1,6 +1,6 @@
-import { DestinationSet, AllDestinations, AnyDestination, AllDestGroup, AnyDestGroup } from './DestinationSet.js'
+import { IDestination, AllDestinations, AnyDestination } from './DestinationSet.js'
+import { BoundingBox, Explorer, Place, WeightedPlace } from './index.js';
 import { CostCalculator, HaversineDistance } from './CostCalculator.js';
-import { BoundingBox, Explorer, Place, Destination } from './index.js';
 import { GoogleMapsConnector } from './GoogleMapsConnector.js'
 import { LnDiscretizer } from './Discretizer.js'
 
@@ -80,19 +80,19 @@ class Program {
 		Barcelona:	41.3927754,	 2.0699778
 		Amsterdam:	52.3546527,	 4.8481785
 		*/
-		let paris =		new Destination(new Place(48.8603237,	 2.3106225),1);
-		let london =	new Destination(new Place(51.5287714,	-0.2420236),1);
-		let berlin =	new Destination(new Place(52.50697,		13.2843069),1);
-		let rome =		new Destination(new Place(41.9102411,	12.3955719),1);
-		let barcelona =	new Destination(new Place(41.3927754,	 2.0699778),1);
-		let amsterdam =	new Destination(new Place(52.3546527,	 4.8481785),1);
+		let paris =		new WeightedPlace(48.8603237,	 2.3106225,1, "paris");
+		let london =	new WeightedPlace(51.5287714,	-0.2420236,1, "london");
+		let berlin =	new WeightedPlace(52.50697,		13.2843069,1, "berlin");
+		let rome =		new WeightedPlace(41.9102411,	12.3955719,1, "rome");
+		let barcelona =	new WeightedPlace(41.3927754,	 2.0699778,1, "barcelona");
+		let amsterdam =	new WeightedPlace(52.3546527,	 4.8481785,1, "amsterdam");
 
 		let cities = [paris, london, berlin, rome, barcelona, amsterdam];
 
-		let box: BoundingBox = new BoundingBox(paris.Place);
+		let box: BoundingBox = new BoundingBox(paris);
 		for (let city of cities) {
 			this.MapConnector.AddMarker(city);
-			box.Expand(city.Place);
+			box.Expand(city);
 		}
 		box.ExpandBy(80);
 
@@ -100,7 +100,7 @@ class Program {
 		let any1 = new AnyDestination([shuffled[0], shuffled[1]]);
 		let any2 = new AnyDestination([shuffled[2], shuffled[3]]);
 		let any3 = new AnyDestination([shuffled[4], shuffled[5]]);
-		let all = new AllDestGroup([any1, any2, any3]);
+		let all = new AllDestinations([any1, any2, any3]);
 
 		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
@@ -176,13 +176,13 @@ class Program {
 		this.Markers = this.Markers.filter((marker) => marker.getMap());
 	}
 
-	GetDestinations(): Destination[] {
+	GetDestinations(): WeightedPlace[] {
 
-		let dests: Destination[] = [];
+		let dests: WeightedPlace[] = [];
 		for (let marker of this.Markers) {
-			let wheight: number = +this.getMarkerLabel(marker);
+			let weight: number = +this.getMarkerLabel(marker);
 			var latlng = marker.getPosition() as google.maps.LatLng;
-			dests.push(new Destination(new Place(latlng.lat(), latlng.lng()), wheight));
+			dests.push(new WeightedPlace(latlng.lat(), latlng.lng(), weight));
 		}
 		return dests;
 	}
@@ -195,7 +195,7 @@ class Program {
 			return;
 		}
 
-		let dset: DestinationSet = new AllDestinations(destinations);
+		let dset: IDestination = new AllDestinations(destinations);
 		//let dset: DestinationSet = new AnyDestination(destinations);
 		let box: BoundingBox = this.MapConnector.GetBoundingBox();
 		box.ExpandBy(50);

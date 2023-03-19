@@ -1,7 +1,7 @@
-import { Destination, Place, BoundingBox } from './index.js';
+import { Place, WeightedPlace, BoundingBox } from './index.js';
 
 export interface MapConnector {
-	AddMarker(dest: Destination): void;
+	AddMarker(dest: WeightedPlace): void;
 	AddLine(p1: Place, p2: Place, cost: number): void;
 	ClearLines(): void;
 	DrawRedRectangle(box: BoundingBox, cost: number): void;
@@ -14,7 +14,7 @@ export class ConsoleLogConnector implements MapConnector {
 
 	constructor() {	}
 
-	AddMarker(dest: Destination) {						console.log({ConsoleLogConnector: "AddMarker", dest});	}
+	AddMarker(dest: WeightedPlace) {					console.log({ConsoleLogConnector: "AddMarker", dest});	}
 	AddLine(p1: Place, p2: Place, cost: number) {		console.log({ConsoleLogConnector: "AddLine", p1, p2, cost});	}
 	ClearLines() {										console.log({ConsoleLogConnector: "ClearLines"});	}
 	DrawRedRectangle(box: BoundingBox, cost: number) {	console.log({ConsoleLogConnector: "DrawRedRectangle", box, cost});	}
