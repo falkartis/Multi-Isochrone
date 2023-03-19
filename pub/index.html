@@ -7,7 +7,31 @@
 	<link rel="stylesheet" type="text/css" href="./style.css" />
 </head>
 <body>
-	<div id="topBar"></div>
+	<div id="topBar">
+		<div class="cont">
+			<label>
+				Cost computation: <br>
+				<select name="costComp">
+					<option value="TaxicabDist">Taxicab distance</option>
+					<option value="EightDirections">8 directions movement</option>
+					<option value="EuclideanDist">Euclidean distance</option>
+					<option value="LatCorrectedEuclidean">Latitude corrected euclidean distance</option>
+					<option value="HaversineDist" selected>Haversine distance</option>
+				</select>
+			</label>
+			<label>
+				Discretizer: <br>
+				<select name="Discretizer">
+					<option value="LinearDiscretizer">LinearDiscretizer</option>
+					<option value="LnDiscretizer" selected>LnDiscretizer</option>
+					<option value="Log10Discretizer">Log10Discretizer</option>
+					<option value="Log2Discretizer">Log2Discretizer</option>
+					<option value="LogDiscretizer">LogDiscretizer</option>
+					<option value="SqrtDiscretizer">SqrtDiscretizer</option>
+				</select>
+			</label>
+		</div>
+	</div>
 	<div id="map"></div>
 	<script type="module" src="./program.js"></script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap&v=weekly" defer></script>

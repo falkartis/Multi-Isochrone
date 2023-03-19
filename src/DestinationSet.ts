@@ -85,17 +85,40 @@ export class AnyDestination extends DestinationSet implements IDestinationSet {
 		super(destinations, weight);
 	}
 	ComputeCostFrom(origin: Place, calc: ICostCalculator) {
-		let cached = this.CostCache.Get(origin);
-		if (cached != undefined)
-			return cached;
+		return this.CacheThis(origin, orig => {
 
-		let lowestCost: number = Number.POSITIVE_INFINITY;
-		for (let destination of this.Destinations) {
-			let cost = destination.ComputeCostFrom(origin, calc) * destination.Weight;
-			if (cost < lowestCost)
-				lowestCost = cost;
-		}
-		this.CostCache.Add(origin, lowestCost);
-		return lowestCost;
+			let lowestCost: number = Number.POSITIVE_INFINITY;
+			for (let destination of this.Destinations) {
+				let cost = destination.ComputeCostFrom(origin, calc) * destination.Weight;
+				if (cost < lowestCost)
+					lowestCost = cost;
+			}
+			return lowestCost;
+		});
+	}
+}
+
+export class TwoOfThem extends DestinationSet implements IDestinationSet {
+
+	constructor(destinations: IDestination[], weight?: number) {
+		super(destinations, weight);
+	}
+	ComputeCostFrom(origin: Place, calc: ICostCalculator) {
+		return this.CacheThis(origin, orig => {
+
+			let lowestCost: number = Number.POSITIVE_INFINITY;
+			let secondLowestCost: number = Number.POSITIVE_INFINITY;
+			for (let destination of this.Destinations) {
+				let cost = destination.ComputeCostFrom(origin, calc) * destination.Weight;
+				if (cost < lowestCost) {
+					secondLowestCost = lowestCost;
+					lowestCost = cost;
+				}
+			}
+			if (secondLowestCost == Number.POSITIVE_INFINITY)
+				return lowestCost;
+			else
+				return (lowestCost + secondLowestCost) / 2; // Divide by 2 because here we consider a circular path.
+		});
 	}
 }

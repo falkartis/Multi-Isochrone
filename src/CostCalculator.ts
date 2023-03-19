@@ -23,7 +23,7 @@ export class TaxicabDist implements ICostCalculator {
 export class EightDirections implements ICostCalculator {
 	DiagonalCost: number;
 	constructor(diagonalCost?: number)	{
-		this.DiagonalCost = diagonalCost ?? Math.sqrt(2);
+		this.DiagonalCost = diagonalCost ?? Math.SQRT2;
 	}
 	// TODO: Get the right units, maybe from constructor.
 	get Units(): string { return ""; }

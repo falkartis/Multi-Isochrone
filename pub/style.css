@@ -36,7 +36,14 @@ input {
 }
 #topBar {
 	height: 50px;
+	text-align: center;
 }
 #map {
 	height: calc(100% - 50px);
+}
+#topBar .cont {
+	display: inline-block;
+}
+#topBar .cont label {
+	display: inline-block;
 }

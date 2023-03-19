@@ -47,7 +47,7 @@ export class WeightedPlace extends Place implements IDestination {
 		this.Weight = weight;
 	}
 	ComputeCostFrom(origin: Place, calc: ICostCalculator): number {
-		return calc.GetCost(origin, this);
+		return 2 * calc.GetCost(origin, this); // multiply by 2 because we consider roundtrip cost.
 	}
 	ClearCostCache(): void {
 		// Nothing to do here since we don't store costs on this class.
