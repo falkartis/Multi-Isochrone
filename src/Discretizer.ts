@@ -1,8 +1,8 @@
-export interface Discretizer {
+export interface IDiscretizer {
 	Discretize(v: number): number;
 }
 
-export class LinearDiscretizer implements Discretizer {
+export class LinearDiscretizer implements IDiscretizer {
 	Step: number;
 	Offset: number;
 	constructor(step: number, offset?: number) {
@@ -15,7 +15,7 @@ export class LinearDiscretizer implements Discretizer {
 	}
 }
 
-export class LnDiscretizer implements Discretizer {
+export class LnDiscretizer implements IDiscretizer {
 
 	Offset: number;
 	Linear: LinearDiscretizer;
@@ -29,7 +29,7 @@ export class LnDiscretizer implements Discretizer {
 	}
 }
 
-export class LogDiscretizer implements Discretizer {
+export class LogDiscretizer implements IDiscretizer {
 
 	Base: number;
 	Offset: number;

@@ -1,6 +1,6 @@
 import { Place, WeightedPlace, BoundingBox } from './index.js';
 
-export interface MapConnector {
+export interface IMapConnector {
 	AddMarker(dest: WeightedPlace): void;
 	AddLine(p1: Place, p2: Place, cost: number): void;
 	ClearLines(): void;
@@ -9,8 +9,7 @@ export interface MapConnector {
 	GetBoundingBox(): BoundingBox;
 }
 
-
-export class ConsoleLogConnector implements MapConnector {
+export class ConsoleLogConnector implements IMapConnector {
 
 	constructor() {	}
 

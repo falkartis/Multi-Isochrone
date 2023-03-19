@@ -1,19 +1,14 @@
-import { CostCalculator, EuclideanDistance, HaversineDistance } from './CostCalculator.js'
-import { MapConnector, ConsoleLogConnector } from './MapConnector.js'
-import { Discretizer, LinearDiscretizer } from './Discretizer.js'
-import { HashCode, Dictionary } from './Dictionary.js'
+import { IMapConnector, ConsoleLogConnector } from './MapConnector.js'
+import { IDiscretizer, LinearDiscretizer } from './Discretizer.js'
+import { IHashCode, Dictionary } from './Dictionary.js'
+import { ICostCalculator } from './CostCalculator.js'
 import { IDestination } from './DestinationSet.js'
-
-
-export function DegToRad(degrees: number) {
-	return degrees * (Math.PI / 180);
-}
 
 export function Lerp(v1: number, v2: number, t: number): number {
 	return v1 * (1 - t) + v2 * t;
 }
 
-export class Place implements HashCode {
+export class Place implements IHashCode {
 	Lat: number;
 	Long: number;
 	constructor(lat: number, long: number) {
@@ -51,7 +46,7 @@ export class WeightedPlace extends Place implements IDestination {
 		this.Name = name ?? "";
 		this.Weight = weight;
 	}
-	ComputeCostFrom(origin: Place, calc: CostCalculator): number {
+	ComputeCostFrom(origin: Place, calc: ICostCalculator): number {
 		return calc.GetCost(origin, this);
 	}
 	ClearCostCache(): void {
@@ -168,31 +163,26 @@ export class BoundingBox {
 	}
 }
 
-
-
-
-
 function Interpolate(p1: Place, p2: Place, v1: number, v2: number) {
 	let t: number = v1 / (v1 - v2);
 	return p1.Lerp(t, p2);
 }
 
-
 export class Explorer {
+	CostCalculator: ICostCalculator;
+	Discretizer: IDiscretizer;
 	DestSet: IDestination;
-	CostCalculator: CostCalculator;
-	Discretizer: Discretizer;
+	Map: IMapConnector;
 	MaxSize: number;
 	MinSize: number;
-	Map: MapConnector;
 	Debug: boolean = false;
 
-	constructor(dSet: IDestination, maxsize: number, minsize: number, disc: Discretizer, costCalc?: CostCalculator, map?: MapConnector) {
+	constructor(dSet: IDestination, maxsize: number, minsize: number, disc: IDiscretizer, costCalc: ICostCalculator, map?: IMapConnector) {
 		this.DestSet = dSet;
 		this.MaxSize = maxsize;
 		this.MinSize = minsize;
 
-		this.CostCalculator = costCalc ?? new EuclideanDistance();
+		this.CostCalculator = costCalc;
 		this.Discretizer = disc;
 		this.Map = map ?? new ConsoleLogConnector();
 	}

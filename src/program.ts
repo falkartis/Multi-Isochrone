@@ -1,6 +1,6 @@
+import { ICostCalculator, TaxicabDist, EightDirections, EuclideanDist, LatCorrectedEuclidean, HaversineDist } from './CostCalculator.js';
 import { IDestination, AllDestinations, AnyDestination } from './DestinationSet.js'
 import { BoundingBox, Explorer, Place, WeightedPlace } from './index.js';
-import { CostCalculator, HaversineDistance } from './CostCalculator.js';
 import { GoogleMapsConnector } from './GoogleMapsConnector.js'
 import { LnDiscretizer } from './Discretizer.js'
 
@@ -105,7 +105,7 @@ class Program {
 		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
 		let disc = new LnDiscretizer(this.DiscretizerStep, this.DiscretizerOffset);
-		let costCalc: CostCalculator = new HaversineDistance();
+		let costCalc: ICostCalculator = new HaversineDist();
 
 		let explorer: Explorer = new Explorer(all, boxSize/25, boxSize/50, disc, costCalc, this.MapConnector);
 		explorer.Explore(box);
@@ -202,7 +202,7 @@ class Program {
 		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
 		let disc = new LnDiscretizer(this.DiscretizerStep, this.DiscretizerOffset);
-		let costCalc: CostCalculator = new HaversineDistance();
+		let costCalc: ICostCalculator = new HaversineDist();
 
 		let explorer: Explorer = new Explorer(dset, boxSize/2, boxSize/80, disc, costCalc, this.MapConnector);
 

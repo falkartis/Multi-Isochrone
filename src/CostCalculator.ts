@@ -1,11 +1,15 @@
-import { DegToRad, Place } from './index.js';
+import { Place } from './index.js';
 
-export interface CostCalculator {
+export function DegToRad(degrees: number) {
+	return degrees * (Math.PI / 180);
+}
+
+export interface ICostCalculator {
 	GetCost(p1: Place, p2: Place): number;
 	get Units(): string;
 }
 
-class TaxicabDistance implements CostCalculator {
+export class TaxicabDist implements ICostCalculator {
 	// TODO: Implement rotation, try to do as much as possible in the constructor.
 	// TODO: Get the right units.
 	get Units(): string { return ""; }
@@ -16,7 +20,23 @@ class TaxicabDistance implements CostCalculator {
 	}
 }
 
-export class EuclideanDistance implements CostCalculator {
+export class EightDirections implements ICostCalculator {
+	DiagonalCost: number;
+	constructor(diagonalCost?: number)	{
+		this.DiagonalCost = diagonalCost ?? Math.sqrt(2);
+	}
+	// TODO: Get the right units, maybe from constructor.
+	get Units(): string { return ""; }
+	GetCost(p1: Place, p2: Place) {
+		let dLat: number = Math.abs(p1.Lat - p2.Lat);
+		let dLong: number = Math.abs(p1.Long - p2.Long);
+		let min = Math.min(dLat, dLong);
+		let max = Math.max(dLat, dLong);
+		return min * this.DiagonalCost + (max - min);
+	}
+}
+
+export class EuclideanDist implements ICostCalculator {
 	// TODO: Get the right units, maybe from constructor.
 	get Units(): string { return ""; }
 	GetCost(p1: Place, p2: Place) {
@@ -26,7 +46,7 @@ export class EuclideanDistance implements CostCalculator {
 	}
 }
 
-export class LatCorrectedEuclideanDistance implements CostCalculator {
+export class LatCorrectedEuclidean implements ICostCalculator {
 	LatScale: number;
 	LongScale: number;
 	constructor(lat: number, planetRadius?: number) {
@@ -44,7 +64,7 @@ export class LatCorrectedEuclideanDistance implements CostCalculator {
 	}
 }
 
-export class HaversineDistance implements CostCalculator {
+export class HaversineDist implements ICostCalculator {
 	PlanetRadius: number;
 	constructor(planetRadius?: number) {
 		if (planetRadius == null) {

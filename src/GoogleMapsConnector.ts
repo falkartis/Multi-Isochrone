@@ -1,8 +1,8 @@
 import { BoundingBox, Place, WeightedPlace } from './index.js';
-import { MapConnector } from './MapConnector.js';
+import { IMapConnector } from './MapConnector.js';
 
 
-export class GoogleMapsConnector implements MapConnector {
+export class GoogleMapsConnector implements IMapConnector {
 
 	Map: google.maps.Map;
 	LatLngList: google.maps.LatLng[] = [];

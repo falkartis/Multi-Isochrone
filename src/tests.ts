@@ -1,15 +1,15 @@
-import { CostCalculator, EuclideanDistance, HaversineDistance, LatCorrectedEuclideanDistance } from './CostCalculator.js'
+import { ICostCalculator, TaxicabDist, EightDirections, EuclideanDist, LatCorrectedEuclidean, HaversineDist } from './CostCalculator.js';
 import { LinearDiscretizer, LnDiscretizer, LogDiscretizer } from './Discretizer.js'
 import { Explorer, BoundingBox, Place, WeightedPlace } from './index.js';
 import { IDestination, AllDestinations } from './DestinationSet.js'
 import { GoogleMapsConnector } from './GoogleMapsConnector.js'
-import { MapConnector } from './MapConnector.js'
+import { IMapConnector } from './MapConnector.js'
 
 
 // TODO: tidy this up
 let map: google.maps.Map;
 
-let mapConn: MapConnector;
+let mapConn: IMapConnector;
 
 export function initMap(): void {
 
@@ -78,7 +78,7 @@ export class Tests {
 			new WeightedPlace(0, -1, 4)
 		];
 		let dSet: IDestination = new AllDestinations(destinations);
-		let calc: EuclideanDistance = new EuclideanDistance();
+		let calc: ICostCalculator = new EuclideanDist();
 		let tCost: number = dSet.ComputeCostFrom(new Place(0,0), calc);
 		if (tCost == 10) {
 			console.log("10 is OK");
@@ -94,7 +94,7 @@ export class Tests {
 		
 		let dSet: IDestination = new AllDestinations([barcelona, paris, berlin, zurich]);
 		let origin: Place = new Place(46.8730811, 3.2886396);
-		let costCalc: CostCalculator = new HaversineDistance();
+		let costCalc: ICostCalculator = new HaversineDist();
 		console.log({barcelona, paris, berlin, zurich, dSet, origin, costCalc});
 		let tCost: number = dSet.ComputeCostFrom(origin, costCalc);
 		console.log("Total cost: " + tCost + "Km");
@@ -124,7 +124,7 @@ export class Tests {
 		let centroidP = dSet.GetCentroid();
 		let centroidWP: WeightedPlace = new WeightedPlace(centroidP.Lat, centroidP.Long, 0);
 
-		let costCalc: CostCalculator = new HaversineDistance();
+		let costCalc: ICostCalculator = new HaversineDist();
 		//let costCalc: CostCalculator = new LatCorrectedEuclideanDistance(centroid.Place.Lat);
 		let centroidCost: number = dSet.ComputeCostFrom(centroidP, costCalc);
 		mapConn.AddMarker(centroidWP);
@@ -188,4 +188,4 @@ document.body.onload = function() {
 	Tests.testRealPlaces();
 	console.log("testExplore:");
 	Tests.testExplore();
-} 
+}

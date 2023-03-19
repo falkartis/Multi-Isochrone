@@ -1,9 +1,9 @@
-export interface HashCode {
+export interface IHashCode {
 	GetHashCode(): number;
 	Equals(other: this): boolean;
 }
 
-export class Dictionary<TKey extends HashCode, TValue> {
+export class Dictionary<TKey extends IHashCode, TValue> {
 	
 	Data: Map<number, [TKey, TValue][]>;
 

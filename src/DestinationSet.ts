@@ -1,9 +1,9 @@
+import { ICostCalculator } from './CostCalculator.js';
 import { Place, BoundingBox } from './index.js';
-import { CostCalculator } from './CostCalculator.js';
 import { Dictionary } from './Dictionary.js';
 
 export interface IDestination {
-	ComputeCostFrom(origin: Place, calc: CostCalculator): number;
+	ComputeCostFrom(origin: Place, calc: ICostCalculator): number;
 	ClearCostCache(): void;
 	GetCentroid(): Place;
 	get Weight(): number;
@@ -65,7 +65,7 @@ export class AllDestinations extends DestinationSet implements IDestinationSet {
 		super(destinations, weight);
 	}
 
-	ComputeCostFrom(origin: Place, calc: CostCalculator) {
+	ComputeCostFrom(origin: Place, calc: ICostCalculator) {
 
 		return this.CacheThis(origin, orig => {
 
@@ -84,7 +84,7 @@ export class AnyDestination extends DestinationSet implements IDestinationSet {
 	constructor(destinations: IDestination[], weight?: number) {
 		super(destinations, weight);
 	}
-	ComputeCostFrom(origin: Place, calc: CostCalculator) {
+	ComputeCostFrom(origin: Place, calc: ICostCalculator) {
 		let cached = this.CostCache.Get(origin);
 		if (cached != undefined)
 			return cached;
