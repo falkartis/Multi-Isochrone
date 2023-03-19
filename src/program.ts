@@ -1,8 +1,8 @@
 import { ICostCalculator, TaxicabDist, EightDirections, EuclideanDist, LatCorrectedEuclidean, HaversineDist } from './CostCalculator.js';
+import { IDiscretizer, LinearDiscretizer, LnDiscretizer, Log10Discretizer, Log2Discretizer, SqrtDiscretizer } from './Discretizer.js'
 import { IDestination, AllDestinations, AnyDestination } from './DestinationSet.js'
 import { BoundingBox, Explorer, Place, WeightedPlace } from './index.js';
 import { GoogleMapsConnector } from './GoogleMapsConnector.js'
-import { LnDiscretizer } from './Discretizer.js'
 
 function initMap() {
 	new Program();
@@ -14,8 +14,10 @@ class Program {
 	RedrawTimer: ReturnType<typeof setTimeout>;
 	MapConnector: GoogleMapsConnector;
 	Markers: google.maps.Marker[];
+	Discretizer: IDiscretizer;
 	DiscretizerStep: number;
 	DiscretizerOffset: number;
+	CostCalculator: ICostCalculator;
 
 	constructor() {
 
@@ -35,8 +37,10 @@ class Program {
 
 		this.RedrawTimer = setTimeout(()=>{ console.log("RedrawTimer"); }, 1);
 		this.MapConnector = new GoogleMapsConnector(map);
+		this.CostCalculator = new HaversineDist();
 		this.DiscretizerOffset = 0;
 		this.DiscretizerStep = 0.25;
+		this.Discretizer = new LnDiscretizer(this.DiscretizerStep, this.DiscretizerOffset);
 		this.Markers = [];
 
 		this.ToolBar();
@@ -48,6 +52,27 @@ class Program {
 			throw new Error('No div with id topBar found.');
 		}
 
+		const costCompTag = topBar.querySelector('[name="costComp"]') as HTMLSelectElement;
+		if (costCompTag != null) {
+			this.SelectCostCalculator(costCompTag.value);
+			costCompTag.onchange = (e) => {
+				const target = e.target as HTMLSelectElement;
+				let newval = target.value;
+				this.SelectCostCalculator(newval);
+			}
+		}
+
+		const discretizerTag = topBar.querySelector('[name="Discretizer"]') as HTMLSelectElement;
+		if (discretizerTag != null) {
+			this.SelectDiscretizer(discretizerTag.value);
+			discretizerTag.onchange = (e) => {
+				const target = e.target as HTMLSelectElement;
+				let newval = target.value;
+				this.SelectDiscretizer(newval);
+			}
+		}
+
+
 		let discStepInput = document.createElement('input');
 		discStepInput.type = "number";
 		discStepInput.value = "" + this.DiscretizerStep;
@@ -57,6 +82,7 @@ class Program {
 			let newval = +target.value;
 			if (newval > 0) {
 				this.DiscretizerStep = newval;
+				// TODO: this should update the discretizer, or the discretizer should be regenerated somehow.
 				this.Redraw();
 			}
 		};
@@ -68,6 +94,72 @@ class Program {
 			this.ComplexExample();
 		});
 		topBar.appendChild(complexExample);
+	}
+
+	SelectDiscretizer(name: string) {		
+		switch (name) {
+		case "LinearDiscretizer": {
+			this.Discretizer = new LinearDiscretizer(this.DiscretizerStep, this.DiscretizerOffset);
+			break;
+		}
+		case "LnDiscretizer": {
+			this.Discretizer = new LnDiscretizer(this.DiscretizerStep, this.DiscretizerOffset);
+			break;
+		}
+		case "Log10Discretizer": {
+			this.Discretizer = new Log10Discretizer(this.DiscretizerStep, this.DiscretizerOffset);
+			break;
+		}
+		case "Log2Discretizer": {
+			this.Discretizer = new Log2Discretizer(this.DiscretizerStep, this.DiscretizerOffset);
+			break;
+		}
+		case "LogDiscretizer": {
+			console.log("Technical debt: get the base somehow!"); // UI parameter
+			//this.Discretizer = new LogDiscretizer(base, this.DiscretizerStep, this.DiscretizerOffset);
+			break;
+		}
+		case "SqrtDiscretizer": {
+			this.Discretizer = new SqrtDiscretizer(this.DiscretizerStep, this.DiscretizerOffset);
+			break;
+		}
+		default: {
+			console.log(`Discretizer of name '${name}' not here.`)
+			break;
+		}
+		}
+		this.Redraw();
+	}
+
+	SelectCostCalculator(name: string) {
+		switch (name) {
+		case "TaxicabDist": {
+			this.CostCalculator = new TaxicabDist();
+			break;
+		}
+		case "EightDirections": {
+			this.CostCalculator = new EightDirections();
+			break;
+		}
+		case "EuclideanDist": {
+			this.CostCalculator = new EuclideanDist();
+			break;
+		}
+		case "LatCorrectedEuclidean": {
+			console.log("Technical debt: get the latitude somehow!");
+			//this.CostCalculator = new LatCorrectedEuclidean(lat);
+			break;
+		}
+		case "HaversineDist": {
+			this.CostCalculator = new HaversineDist();
+			break;
+		}
+		default: {
+			console.log(`CostCalculator of name '${name}' not here.`)
+			break;
+		}
+		}
+		this.Redraw();
 	}
 
 	ComplexExample() {
@@ -104,10 +196,7 @@ class Program {
 
 		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
-		let disc = new LnDiscretizer(this.DiscretizerStep, this.DiscretizerOffset);
-		let costCalc: ICostCalculator = new HaversineDist();
-
-		let explorer: Explorer = new Explorer(all, boxSize/25, boxSize/50, disc, costCalc, this.MapConnector);
+		let explorer: Explorer = new Explorer(all, boxSize/25, boxSize/50, this.Discretizer, this.CostCalculator, this.MapConnector);
 		explorer.Explore(box);
 
 		console.log("ComplexExample end.")
@@ -201,10 +290,7 @@ class Program {
 		box.ExpandBy(50);
 		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
-		let disc = new LnDiscretizer(this.DiscretizerStep, this.DiscretizerOffset);
-		let costCalc: ICostCalculator = new HaversineDist();
-
-		let explorer: Explorer = new Explorer(dset, boxSize/2, boxSize/80, disc, costCalc, this.MapConnector);
+		let explorer: Explorer = new Explorer(dset, boxSize/2, boxSize/80, this.Discretizer, this.CostCalculator, this.MapConnector);
 
 		clearTimeout(this.RedrawTimer);
 

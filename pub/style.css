@@ -47,3 +47,6 @@ input {
 #topBar .cont label {
 	display: inline-block;
 }
+#topBar .cont select {
+	max-width: 120px;
+}
