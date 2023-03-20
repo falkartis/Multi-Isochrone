@@ -1,6 +1,6 @@
 import { ICostCalculator, TaxicabDist, EightDirections, EuclideanDist, LatCorrectedEuclidean, HaversineDist } from './CostCalculator.js';
 import { IDiscretizer, LinearDiscretizer, LnDiscretizer, Log10Discretizer, Log2Discretizer, SqrtDiscretizer } from './Discretizer.js'
-import { IDestination, AllDestinations, AnyDestination } from './DestinationSet.js'
+import { IDestination, IDestinationSet, AllDestinations, AnyDestination, TwoOfThem } from './DestinationSet.js'
 import { BoundingBox, Explorer, Place, WeightedPlace } from './index.js';
 import { GoogleMapsConnector } from './GoogleMapsConnector.js'
 
@@ -8,6 +8,11 @@ function initMap() {
 	new Program();
 }
 window.initMap = initMap;
+
+/*
+TODO: create an interface called IMarkerSet and 3 homologous classes for the AllDestinations, AnyDestination and TwoOfThem classes.
+Instead of containing IDestination elements make them contain google.maps.Marker|IMarkerSet. Add a method that returns a IDestinationSet.
+*/
 
 class Program {
 
@@ -18,6 +23,9 @@ class Program {
 	DiscretizerStep: number;
 	DiscretizerOffset: number;
 	CostCalculator: ICostCalculator;
+	DestinationSet: IDestinationSet;
+
+	//TODO: Keep this.Markers and this.DestinationSet synchronized
 
 	constructor() {
 
@@ -33,11 +41,12 @@ class Program {
 
 		map.addListener("dblclick", 	(e) => { this.placeMarker(e.latLng, map); });
 		map.addListener("zoom_changed",	() => { this.Redraw(); });
-		map.addListener("dragend",		() => { this.Redraw();	});
+		map.addListener("dragend",		() => { this.Redraw(); });
 
 		this.RedrawTimer = setTimeout(()=>{ console.log("RedrawTimer"); }, 1);
 		this.MapConnector = new GoogleMapsConnector(map);
 		this.CostCalculator = new HaversineDist();
+		this.DestinationSet = new AllDestinations([]);
 		this.DiscretizerOffset = 0;
 		this.DiscretizerStep = 0.25;
 		this.Discretizer = new LnDiscretizer(this.DiscretizerStep, this.DiscretizerOffset);
@@ -163,15 +172,7 @@ class Program {
 	}
 
 	ComplexExample() {
-		console.log("ComplexExample start.")
-		/*
-		Paris:		48.8603237,	 2.3106225
-		London:		51.5287714,	-0.2420236
-		Berlin:		52.50697,	13.2843069
-		Rome:		41.9102411,	12.3955719
-		Barcelona:	41.3927754,	 2.0699778
-		Amsterdam:	52.3546527,	 4.8481785
-		*/
+		console.log("ComplexExample start.");
 		let paris =		new WeightedPlace(48.8603237,	 2.3106225,1, "paris");
 		let london =	new WeightedPlace(51.5287714,	-0.2420236,1, "london");
 		let berlin =	new WeightedPlace(52.50697,		13.2843069,1, "berlin");
@@ -194,12 +195,15 @@ class Program {
 		let any3 = new AnyDestination([shuffled[4], shuffled[5]]);
 		let all = new AllDestinations([any1, any2, any3]);
 
+		console.log(all);
+		this.DestinationSet = all;
+
 		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
-		let explorer: Explorer = new Explorer(all, boxSize/25, boxSize/50, this.Discretizer, this.CostCalculator, this.MapConnector);
+		let explorer = new Explorer(this.DestinationSet, boxSize/25, boxSize/50, this.Discretizer, this.CostCalculator, this.MapConnector);
 		explorer.Explore(box);
 
-		console.log("ComplexExample end.")
+		console.log("ComplexExample end.");
 	}
 
 	placeMarker(latLng: google.maps.LatLng, map: google.maps.Map) {
@@ -284,13 +288,13 @@ class Program {
 			return;
 		}
 
-		let dset: IDestination = new AllDestinations(destinations);
-		//let dset: DestinationSet = new AnyDestination(destinations);
+		//let dset: IDestination = new AllDestinations(destinations);
+
 		let box: BoundingBox = this.MapConnector.GetBoundingBox();
 		box.ExpandBy(50);
 		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
-		let explorer: Explorer = new Explorer(dset, boxSize/2, boxSize/80, this.Discretizer, this.CostCalculator, this.MapConnector);
+		let explorer = new Explorer(this.DestinationSet, boxSize/2, boxSize/80, this.Discretizer, this.CostCalculator, this.MapConnector);
 
 		clearTimeout(this.RedrawTimer);
 
