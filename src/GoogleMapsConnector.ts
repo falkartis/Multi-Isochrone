@@ -6,7 +6,7 @@ import { BoundingBox, Place } from './index.js';
 export interface IMarker {
 	GetDestination(): IDestination;
 	NiceObj(): any;
-	RenderCRUD(parent: HTMLElement, callback: (newval: IMarker) => void);
+	RenderCRUD(parent: HTMLElement, callback: (newval: IMarker) => void, radioCb?: (set: IMarkerSet) => void, delCb?: (m: IMarker) => void);
 	Name: string;
 }
 
@@ -51,7 +51,7 @@ export class ExtendedMarker extends google.maps.Marker implements IMarker {
 	NiceObj() {
 		return {Name: this.Name, Weight: this.GetWeight()};
 	}
-	RenderCRUD(parent: HTMLElement, callback: (newval: IMarker) => void) {
+	RenderCRUD(parent: HTMLElement, callback: (newval: IMarker) => void, radioCb?: (set: IMarkerSet) => void, delCb?: (m: IMarker) => void) {
 		let weightHtml = document.createElement('input');
 		weightHtml.type = "number";
 		weightHtml.value = "" + this.GetWeight();
@@ -68,9 +68,16 @@ export class ExtendedMarker extends google.maps.Marker implements IMarker {
 			this.Name = target.value;
 			callback(this);
 		};
+		let delHtml = document.createElement('button');
+		delHtml.innerHTML = "x";
+		delHtml.addEventListener('click', () => {
+			this.setMap(null);
+			delCb(this);
+		});
 
 		parent.appendChild(nameHtml);
 		parent.appendChild(weightHtml);
+		parent.appendChild(delHtml);
 	}
 }
 
@@ -125,7 +132,7 @@ abstract class MarkerSet implements IMarkerSet {
 			Name: this.Name,
 		};
 	}
-	RenderCRUD(parent: HTMLElement, callback: (newval: IMarker) => void) {
+	RenderCRUD(parent: HTMLElement, callback: (newval: IMarker) => void, radioCb?: (set: IMarkerSet) => void, delCb?: (m: IMarker) => void) {
 		let typeHtml = document.createElement('select');
 		let allHtml = document.createElement('option');
 		let anyHtml = document.createElement('option');
@@ -182,14 +189,26 @@ abstract class MarkerSet implements IMarkerSet {
 			marker.RenderCRUD(liHtml, newchild => {
 				this.Markers[i] = newchild; // Will this replace the last one?
 				callback(this);
-			});
+			}, radioCb, delCb);
 			ulHtml.appendChild(liHtml);
 		}
 		let plusHtml = document.createElement('button');
 		plusHtml.innerHTML = "+";
 		plusHtml.addEventListener('click', () => {
 			this.AddMarker(new AllMarkers([]));
+			callback(this);
 		});
+		let radioHtml = document.createElement('input');
+		radioHtml.type = "radio";
+		radioHtml.name = "ActiveMarkerSet";
+		radioHtml.value = this.Name;
+		radioHtml.addEventListener('change', (event) => {
+			if ((event.target as HTMLInputElement).checked) {
+				console.log(`Selected value: ${(event.target as HTMLInputElement).value}`);
+				radioCb(this);
+			}
+		});
+		parent.appendChild(radioHtml);
 		parent.appendChild(typeHtml);
 		parent.appendChild(nameHtml);
 		parent.appendChild(weightHtml);

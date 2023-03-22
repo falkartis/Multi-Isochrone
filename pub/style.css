@@ -60,6 +60,8 @@ input {
 #markerSetUI select {
 	width: 50px;
 	margin: 0 2px;
+	background: none;
+	border: none;
 }
 #markerSetUI input {
 	border: none;
@@ -67,6 +69,9 @@ input {
 }
 #markerSetUI input[type="number"] {
 	width: 36px;
+}
+#markerSetUI input[type="radio"] {
+	width: auto;
 }
 #markerSetUI input:hover {
 	box-shadow: 0 0 0 1px grey;

@@ -21,8 +21,6 @@ class Program {
 	DiscretizerStep: number;
 	DiscretizerOffset: number;
 	CostCalculator: ICostCalculator;
-	//Markers: google.maps.Marker[];
-	//DestinationSet: IDestinationSet;
 	MarkerSet: IMarkerSet;
 	ActiveMarkerSet: IMarkerSet;
 
@@ -113,12 +111,20 @@ class Program {
 			throw new Error('No div with id markerSetUI found.');
 		}
 		sideBar.innerHTML = "";
-		this.MarkerSet.RenderCRUD(sideBar, newval => {
-			let newValAsSet = newval as IMarkerSet;
-			if (newValAsSet.Markers) {
-				this.MarkerSet = newValAsSet;
-			}
-			this.Redraw();
+		this.MarkerSet.RenderCRUD(sideBar,
+			newval => {
+				let newValAsSet = newval as IMarkerSet;
+				if (newValAsSet.Markers) {
+					this.MarkerSet = newValAsSet;
+				}
+				this.Redraw();
+			},
+			radioSet => {
+				this.ActiveMarkerSet = radioSet;
+			},
+			marker => {
+				this.CleanMarkers();
+				this.Redraw();
 		});
 	}
 
@@ -246,22 +252,13 @@ class Program {
 		}
 	}
 
-	markerClick(marker: google.maps.Marker) {
+	markerClick(marker: ExtendedMarker) {
 
 		let div = document.createElement('div');
 		let info = document.createElement('label');
 		let del = document.createElement('button');
-		let input = document.createElement('input');
-
-		input.type = "number";
-		input.value = this.getMarkerLabel(marker);
-		input.onchange = (e) => {
-			const target = e.target as HTMLInputElement;
-			marker.setLabel(target.value);
-		};
 
 		info.innerHTML = "How often do you visit this place: <br>";
-		info.appendChild(input);
 
 		del.innerHTML = "delete";
 		del.style.float = "right";
@@ -273,6 +270,7 @@ class Program {
 
 		div.appendChild(info);
 		div.appendChild(del);
+		marker.RenderCRUD(div, n => {});
 
 		const infowindow = new google.maps.InfoWindow({ content: div });
 		infowindow.open(marker.getMap(), marker);
