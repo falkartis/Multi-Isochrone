@@ -7,7 +7,7 @@ export interface IMapConnector {
 	ClearLines(): void;
 	DrawRedRectangle(box: BoundingBox, cost: number): void;
 	DrawDarkRectangle(box: BoundingBox): void;
-	GetBoundingBox(): BoundingBox; //TODO: could be 2 when wrapping around. Change to GetBoundingBoxes(): BoundingBox[];
+	GetBoundingBoxes(): BoundingBox[]; //Could be 2 when wrapping around the globe.
 }
 
 export class ConsoleLogConnector implements IMapConnector {
@@ -19,8 +19,8 @@ export class ConsoleLogConnector implements IMapConnector {
 	ClearLines() {										console.log({ConsoleLogConnector: "ClearLines"});	}
 	DrawRedRectangle(box: BoundingBox, cost: number) {	console.log({ConsoleLogConnector: "DrawRedRectangle", box, cost});	}
 	DrawDarkRectangle(box: BoundingBox) {				console.log({ConsoleLogConnector: "DrawDarkRectangle", box});	}
-	GetBoundingBox() {
+	GetBoundingBoxes() {
 		console.log("ConsoleLogConnector is a dummy class, returning 0,0 BoundingBox.")
-		return new BoundingBox(new Place(0, 0));
+		return [new BoundingBox(new Place(0, 0))];
 	}
 }

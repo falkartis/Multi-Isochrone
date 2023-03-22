@@ -249,22 +249,22 @@ export class GoogleMapsConnector implements IMapConnector {
 	DrawDarkRectangle(box: BoundingBox) {
 		this.DrawRectangle(box, "#211");
 	}
-	GetBoundingBox() {
+	GetBoundingBoxes(): BoundingBox[] {
 		let box: google.maps.LatLngBounds|undefined = this.Map.getBounds();
 		if (box === undefined) {
 			console.log("Map.getBounds() returned undefined, can't build BoundingBox, returning 0,0.");
-			return new BoundingBox(new Place(0, 0))
+			return [new BoundingBox(new Place(0, 0))];
 		}
 		let min = new Place(box.getSouthWest().lat(), box.getSouthWest().lng());
 		let max = new Place(box.getNorthEast().lat(), box.getNorthEast().lng());
 
 		if (min.Long > max.Long) {
-			console.log("Wrapping arround -180º, +180º.");
+			return [
+				new BoundingBox(min, new Place(max.Lat,  180)),
+				new BoundingBox(new Place(min.Lat, -180), max)
+			];
+		} else {
+			return [new BoundingBox(min, max)];
 		}
-
-		let bb = new BoundingBox(min);
-		// Using expand method instead of the constructor with min anb max becaus google may mess up in some cases.
-		bb.Expand(max);
-		return bb;
 	}
 }
