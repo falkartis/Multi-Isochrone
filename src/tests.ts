@@ -167,13 +167,15 @@ export class Tests {
 			console.time('Redraw');
 			mapConn.ClearLines();
 			explorer.DestSet.ClearCostCache();
-			let box: BoundingBox = mapConn.GetBoundingBox();
-			box.ExpandBy(50);
-			let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-			explorer.SetMaxSize(boxSize/2);
-			explorer.SetMinSize(boxSize/80);
-			//explorer.Debug = true;
-			explorer.Explore(box);
+			let boxes: BoundingBox[] = mapConn.GetBoundingBoxes();
+			for (let box of boxes) {
+				box.ExpandBy(50);
+				let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
+				explorer.SetMaxSize(boxSize/2);
+				explorer.SetMinSize(boxSize/80);
+				//explorer.Debug = true;
+				explorer.Explore(box);
+			}
 			console.timeEnd('Redraw')
 		}, 1000);
 

@@ -276,13 +276,9 @@ class Program {
 		if (this.MarkerSet.Markers.length < 1)
 			return;
 
-		let box: BoundingBox = this.MapConnector.GetBoundingBox();
-		box.ExpandBy(50);
-		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-
 		let dSet = this.MarkerSet.GetDestinationSet();
 
-		let explorer = new Explorer(dSet, boxSize/2, boxSize/80, this.Discretizer, this.CostCalculator, this.MapConnector);
+		let explorer = new Explorer(dSet, 90, 45, this.Discretizer, this.CostCalculator, this.MapConnector);
 
 		clearTimeout(this.RedrawTimer);
 
@@ -290,15 +286,16 @@ class Program {
 			console.time('Redraw');
 			this.MapConnector.ClearLines();
 			explorer.DestSet.ClearCostCache();
-			let box: BoundingBox = this.MapConnector.GetBoundingBox();
 			
-			//box.ExpandBy(50);
-
-			let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-			explorer.SetMaxSize(boxSize/10);
-			explorer.SetMinSize(boxSize/80);
-			//explorer.Debug = true;
-			explorer.Explore(box);
+			let boxes: BoundingBox[] = this.MapConnector.GetBoundingBoxes();
+			
+			for (let box of boxes) {
+				let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
+				explorer.SetMaxSize(boxSize/10);
+				explorer.SetMinSize(boxSize/80);
+				//explorer.Debug = true;
+				explorer.Explore(box);
+			}
 			console.timeEnd('Redraw')
 		}, 1000);
 
