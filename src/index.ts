@@ -37,26 +37,6 @@ export class Place implements IHashCode {
 	}
 }
 
-export class WeightedPlace extends Place implements IDestination {
-	Weight: number;
-	Name: string;
-
-	constructor(latitude: number, longitude: number, weight: number, name?: string) {
-		super(latitude, longitude);
-		this.Name = name ?? "";
-		this.Weight = weight;
-	}
-	ComputeCostFrom(origin: Place, calc: ICostCalculator): number {
-		return 2 * calc.GetCost(origin, this); // multiply by 2 because we consider roundtrip cost.
-	}
-	ClearCostCache(): void {
-		// Nothing to do here since we don't store costs on this class.
-	}
-	GetCentroid(): Place {
-		return new Place(this.Lat, this.Long);
-	}
-}
-
 export class BoundingBox {
 	Min: Place;
 	Max: Place;

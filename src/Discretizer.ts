@@ -1,5 +1,7 @@
 export interface IDiscretizer {
 	Discretize(v: number): number;
+	SetStep(s: number): void;
+	SetOffset(o: number): void;
 }
 
 export class LinearDiscretizer implements IDiscretizer {
@@ -10,59 +12,67 @@ export class LinearDiscretizer implements IDiscretizer {
 		this.Offset = offset ?? 0;
 	}
 	Discretize(v: number) {
-		// ceil or floor, that is the question
 		return this.Step * Math.ceil((v - this.Offset) / this.Step) + this.Offset;
+	}
+	SetStep(s: number) {
+		this.Step = s;
+	}
+	SetOffset(o: number) {
+		this.Offset = o;
 	}
 }
 
-export class LnDiscretizer implements IDiscretizer {
-
+abstract class NonLinearDiscretizer {
 	Offset: number;
 	Linear: LinearDiscretizer;
+
 	constructor(step: number, offset?: number) {
 		this.Linear = new LinearDiscretizer(step);
 		this.Offset = offset ?? 0;
+	}
+	SetStep(s: number) {
+		this.Linear.SetStep(s);
+	}
+	SetOffset(o: number) {
+		this.Offset = o;
+	}
+}
+
+export class LnDiscretizer extends NonLinearDiscretizer implements IDiscretizer {
+	constructor(step: number, offset?: number) {
+		super(step, offset);
 	}
 	Discretize(v: number) {
 		return Math.exp(this.Linear.Discretize(Math.log(Math.abs(v - this.Offset)))) + this.Offset;
 	}
 }
 
-export class Log10Discretizer implements IDiscretizer {
+export class Log10Discretizer extends NonLinearDiscretizer implements IDiscretizer {
 
-	Offset: number;
-	Linear: LinearDiscretizer;
 	constructor(step: number, offset?: number) {
-		this.Linear = new LinearDiscretizer(step);
-		this.Offset = offset ?? 0;
+		super(step, offset);
 	}
 	Discretize(v: number) {
 		return Math.pow(10, this.Linear.Discretize(Math.log10(Math.abs(v - this.Offset)))) + this.Offset;
 	}
 }
 
-export class Log2Discretizer implements IDiscretizer {
+export class Log2Discretizer extends NonLinearDiscretizer implements IDiscretizer {
 
-	Offset: number;
-	Linear: LinearDiscretizer;
 	constructor(step: number, offset?: number) {
-		this.Linear = new LinearDiscretizer(step);
-		this.Offset = offset ?? 0;
+		super(step, offset);
 	}
 	Discretize(v: number) {
 		return Math.pow(2, this.Linear.Discretize(Math.log2(Math.abs(v - this.Offset)))) + this.Offset;
 	}
 }
 
-export class LogDiscretizer implements IDiscretizer {
+export class LogDiscretizer extends NonLinearDiscretizer implements IDiscretizer {
 
 	Base: number;
-	Offset: number;
-	Linear: LinearDiscretizer;
 	constructor(base: number, step: number, offset?: number) {
+		super(step, offset);
 		this.Base = base;
-		this.Offset = offset ?? 0;
-		this.Linear = new LinearDiscretizer(step);
 	}
 
 	LogBase(x:number, y:number) {
@@ -74,13 +84,10 @@ export class LogDiscretizer implements IDiscretizer {
 	}
 }
 
-export class SqrtDiscretizer implements IDiscretizer {
+export class SqrtDiscretizer extends NonLinearDiscretizer implements IDiscretizer {
 
-	Offset: number;
-	Linear: LinearDiscretizer;
 	constructor(step: number, offset?: number) {
-		this.Linear = new LinearDiscretizer(step);
-		this.Offset = offset ?? 0;
+		super(step, offset);
 	}
 	Discretize(v: number) {
 		return Math.pow(this.Linear.Discretize(Math.sqrt(Math.abs(v - this.Offset))), 2) + this.Offset;

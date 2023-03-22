@@ -1,31 +1,30 @@
 import { ICostCalculator, TaxicabDist, EightDirections, EuclideanDist, LatCorrectedEuclidean, HaversineDist } from './CostCalculator.js';
-import { IDiscretizer, LinearDiscretizer, LnDiscretizer, Log10Discretizer, Log2Discretizer, SqrtDiscretizer } from './Discretizer.js'
-import { IDestination, IDestinationSet, AllDestinations, AnyDestination, TwoOfThem } from './DestinationSet.js'
-import { BoundingBox, Explorer, Place, WeightedPlace } from './index.js';
-import { GoogleMapsConnector } from './GoogleMapsConnector.js'
+import { GoogleMapsConnector, IMarkerSet, IMarker, ExtendedMarker, AllMarkers, AnyMarker, TwoMarkers } from './GoogleMapsConnector.js';
+import { IDiscretizer, LinearDiscretizer, LnDiscretizer, Log10Discretizer, Log2Discretizer, SqrtDiscretizer } from './Discretizer.js';
+import { IDestination, IDestinationSet, WeightedPlace, AllDestinations, AnyDestination, TwoOfThem } from './DestinationSet.js';
+import { BoundingBox, Explorer, Place } from './index.js';
+
 
 function initMap() {
 	new Program();
 }
 window.initMap = initMap;
-
-/*
-TODO: create an interface called IMarkerSet and 3 homologous classes for the AllDestinations, AnyDestination and TwoOfThem classes.
-Instead of containing IDestination elements make them contain google.maps.Marker|IMarkerSet. Add a method that returns a IDestinationSet.
-*/
+window.addEventListener('load', function() {
+	initMap();
+});
 
 class Program {
 
 	RedrawTimer: ReturnType<typeof setTimeout>;
 	MapConnector: GoogleMapsConnector;
-	Markers: google.maps.Marker[];
 	Discretizer: IDiscretizer;
 	DiscretizerStep: number;
 	DiscretizerOffset: number;
 	CostCalculator: ICostCalculator;
-	DestinationSet: IDestinationSet;
-
-	//TODO: Keep this.Markers and this.DestinationSet synchronized
+	//Markers: google.maps.Marker[];
+	//DestinationSet: IDestinationSet;
+	MarkerSet: IMarkerSet;
+	ActiveMarkerSet: IMarkerSet;
 
 	constructor() {
 
@@ -46,11 +45,12 @@ class Program {
 		this.RedrawTimer = setTimeout(()=>{ console.log("RedrawTimer"); }, 1);
 		this.MapConnector = new GoogleMapsConnector(map);
 		this.CostCalculator = new HaversineDist();
-		this.DestinationSet = new AllDestinations([]);
 		this.DiscretizerOffset = 0;
 		this.DiscretizerStep = 0.25;
 		this.Discretizer = new LnDiscretizer(this.DiscretizerStep, this.DiscretizerOffset);
-		this.Markers = [];
+
+		this.MarkerSet = new AllMarkers([]);
+		this.ActiveMarkerSet = this.MarkerSet;
 
 		this.ToolBar();
 	}
@@ -91,6 +91,7 @@ class Program {
 			let newval = +target.value;
 			if (newval > 0) {
 				this.DiscretizerStep = newval;
+				this.Discretizer.SetStep(newval);
 				// TODO: this should update the discretizer, or the discretizer should be regenerated somehow.
 				this.Redraw();
 			}
@@ -173,53 +174,55 @@ class Program {
 
 	ComplexExample() {
 		console.log("ComplexExample start.");
-		let paris =		new WeightedPlace(48.8603237,	 2.3106225,1, "paris");
-		let london =	new WeightedPlace(51.5287714,	-0.2420236,1, "london");
-		let berlin =	new WeightedPlace(52.50697,		13.2843069,1, "berlin");
-		let rome =		new WeightedPlace(41.9102411,	12.3955719,1, "rome");
-		let barcelona =	new WeightedPlace(41.3927754,	 2.0699778,1, "barcelona");
-		let amsterdam =	new WeightedPlace(52.3546527,	 4.8481785,1, "amsterdam");
+		let paris =		new ExtendedMarker(this.MapConnector.Map, 48.8603237,	 2.3106225, 1, "paris");
+		let london =	new ExtendedMarker(this.MapConnector.Map, 51.5287714,	-0.2420236, 1, "london");
+		let berlin =	new ExtendedMarker(this.MapConnector.Map, 52.50697,		13.2843069, 1, "berlin");
+		let rome =		new ExtendedMarker(this.MapConnector.Map, 41.9102411,	12.3955719, 1, "rome");
+		let barcelona =	new ExtendedMarker(this.MapConnector.Map, 41.3927754,	 2.0699778, 1, "barcelona");
+		let amsterdam =	new ExtendedMarker(this.MapConnector.Map, 52.3546527,	 4.8481785, 1, "amsterdam");
 
 		let cities = [paris, london, berlin, rome, barcelona, amsterdam];
 
-		let box: BoundingBox = new BoundingBox(paris);
+		let box: BoundingBox = new BoundingBox(paris.GetDestination().GetCentroid());
 		for (let city of cities) {
-			this.MapConnector.AddMarker(city);
-			box.Expand(city);
+				city.addListener("click", () => {
+					this.markerClick(city);
+				});
+				city.addListener("dragend", () => {
+					this.Redraw();
+				});
+			box.Expand(city.GetDestination().GetCentroid());
 		}
 		box.ExpandBy(80);
 
 		let shuffled = cities.map(value => ({ value, r: Math.random() })).sort((a, b) => a.r - b.r).map(({ value }) => value);
-		let any1 = new AnyDestination([shuffled[0], shuffled[1]]);
-		let any2 = new AnyDestination([shuffled[2], shuffled[3]]);
-		let any3 = new AnyDestination([shuffled[4], shuffled[5]]);
-		let all = new AllDestinations([any1, any2, any3]);
+		let any = new AnyMarker([shuffled[0], shuffled[1], shuffled[2]]);
+		let two = new TwoMarkers([shuffled[3], shuffled[4], shuffled[5]]);
+		let all = new AllMarkers([any, two]);
 
-		console.log(all);
-		this.DestinationSet = all;
+		console.log(all.NiceObj());
+		this.MarkerSet = all;
+		this.ActiveMarkerSet = all;
 
 		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
-		let explorer = new Explorer(this.DestinationSet, boxSize/25, boxSize/50, this.Discretizer, this.CostCalculator, this.MapConnector);
+		let dSet = this.MarkerSet.GetDestinationSet();
+
+		let explorer = new Explorer(dSet, boxSize/25, boxSize/50, this.Discretizer, this.CostCalculator, this.MapConnector);
 		explorer.Explore(box);
 
 		console.log("ComplexExample end.");
 	}
 
 	placeMarker(latLng: google.maps.LatLng, map: google.maps.Map) {
-		let marker = new google.maps.Marker({
-			position: latLng,
-			map: map,
-			draggable: true,
-			label: "1",
-		});
+		let marker = new ExtendedMarker(map, latLng.lat(), latLng.lng());
 		marker.addListener("click", () => {
 			this.markerClick(marker);
 		});
 		marker.addListener("dragend", () => {
 			this.Redraw();
 		});
-		this.Markers.push(marker);
+		this.ActiveMarkerSet.AddMarker(marker);
 	}
 
 	getMarkerLabel(marker: google.maps.Marker): string {
@@ -230,7 +233,6 @@ class Program {
 			return markerLabel?.text ?? "1";
 		}
 	}
-
 
 	markerClick(marker: google.maps.Marker) {
 
@@ -266,35 +268,21 @@ class Program {
 	}
 
 	CleanMarkers(): void {
-		this.Markers = this.Markers.filter((marker) => marker.getMap());
-	}
-
-	GetDestinations(): WeightedPlace[] {
-
-		let dests: WeightedPlace[] = [];
-		for (let marker of this.Markers) {
-			let weight: number = +this.getMarkerLabel(marker);
-			var latlng = marker.getPosition() as google.maps.LatLng;
-			dests.push(new WeightedPlace(latlng.lat(), latlng.lng(), weight));
-		}
-		return dests;
+		this.MarkerSet.CleanMarkers();
 	}
 
 	Redraw() {
 
-		let destinations = this.GetDestinations();
-
-		if (destinations.length < 2) {
+		if (this.MarkerSet.Markers.length < 1)
 			return;
-		}
-
-		//let dset: IDestination = new AllDestinations(destinations);
 
 		let box: BoundingBox = this.MapConnector.GetBoundingBox();
 		box.ExpandBy(50);
 		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 
-		let explorer = new Explorer(this.DestinationSet, boxSize/2, boxSize/80, this.Discretizer, this.CostCalculator, this.MapConnector);
+		let dSet = this.MarkerSet.GetDestinationSet();
+
+		let explorer = new Explorer(dSet, boxSize/2, boxSize/80, this.Discretizer, this.CostCalculator, this.MapConnector);
 
 		clearTimeout(this.RedrawTimer);
 
@@ -303,7 +291,9 @@ class Program {
 			this.MapConnector.ClearLines();
 			explorer.DestSet.ClearCostCache();
 			let box: BoundingBox = this.MapConnector.GetBoundingBox();
-			box.ExpandBy(50);
+			
+			//box.ExpandBy(50);
+
 			let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 			explorer.SetMaxSize(boxSize/10);
 			explorer.SetMinSize(boxSize/80);

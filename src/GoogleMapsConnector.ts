@@ -1,6 +1,124 @@
-import { BoundingBox, Place, WeightedPlace } from './index.js';
+import { IDestination, IDestinationSet, AllDestinations, AnyDestination, TwoOfThem } from './DestinationSet.js';
+import { WeightedPlace } from './DestinationSet.js';
 import { IMapConnector } from './MapConnector.js';
+import { BoundingBox, Place } from './index.js';
 
+export interface IMarker {
+	GetDestination(): IDestination;
+	NiceObj(): any;
+}
+
+export interface IMarkerSet extends IMarker {
+	GetDestinationSet(): IDestinationSet;
+	AddMarker(marker: IMarker): void;
+	CleanMarkers(): void;
+	Markers: IMarker[];
+}
+
+export class ExtendedMarker extends google.maps.Marker implements IMarker {
+
+	Name: string;
+
+	constructor(map: google.maps.Map, lat: number, long: number, weight?: number, name?: string) {
+
+		super({
+			position: new google.maps.LatLng(lat, long),
+			map: map,
+			draggable: true,
+			label: "" + (weight ?? "1"),
+		});
+		this.Name = name ?? "";
+	}
+	GetWeight(): number {
+		let weight: number;
+
+		const markerLabel = this.getLabel() as google.maps.MarkerLabel | string;
+		if (typeof markerLabel === "string") {
+			weight = +markerLabel;
+		} else {
+			weight = +(markerLabel?.text ?? "1");
+		}
+		return weight;
+	}
+	GetDestination(): IDestination {
+
+		var latlng = this.getPosition() as google.maps.LatLng;
+
+		return new WeightedPlace(latlng.lat(), latlng.lng(), this.GetWeight());
+	}
+	NiceObj() {
+		return {Name: this.Name, Weight: this.GetWeight()};
+	}
+}
+
+abstract class MarkerSet implements IMarkerSet {
+	Markers: IMarker[];
+	Weight: number;
+	// TODO: add name here and to the constructors
+
+	constructor(markers: IMarker[], weight?: number) {
+		this.Markers = markers;
+		this.Weight = weight ?? 1;
+	}
+
+	abstract GetDestinationSet(): IDestinationSet;
+
+	AddMarker(marker: IMarker) {
+		this.Markers.push(marker);
+	}
+	
+	GetDestinations() {
+		return this.Markers.map( m => m.GetDestination());
+	}
+
+	GetDestination() {
+		return this.GetDestinationSet();
+	}
+
+	CleanMarkers(): void {
+		let newMarkers: IMarker[] = [];
+
+		for (let marker of this.Markers) {
+
+			if ((marker as IMarkerSet).CleanMarkers) {
+				(marker as IMarkerSet).CleanMarkers();
+				if ((marker as IMarkerSet).Markers.length > 0) {
+					newMarkers.push(marker);
+				}
+			} else {
+				if ((marker as ExtendedMarker).getMap() !== null) {
+					newMarkers.push(marker);
+				}
+			}
+		}
+		this.Markers = newMarkers;
+	}
+	NiceObj() {
+		return {
+			Type: this.constructor.name,
+			Weight: this.Weight,
+			Markers: this.Markers.map(m => m.NiceObj()),
+		};
+	}
+}
+
+export class AllMarkers extends MarkerSet {
+	GetDestinationSet() {
+		return new AllDestinations(this.GetDestinations(), this.Weight);
+	}
+}
+
+export class AnyMarker extends MarkerSet {
+	GetDestinationSet() {
+		return new AnyDestination(this.GetDestinations(), this.Weight);
+	}
+}
+
+export class TwoMarkers extends MarkerSet {
+	GetDestinationSet() {
+		return new TwoOfThem(this.GetDestinations(), this.Weight);
+	}
+}
 
 export class GoogleMapsConnector implements IMapConnector {
 
@@ -139,6 +257,11 @@ export class GoogleMapsConnector implements IMapConnector {
 		}
 		let min = new Place(box.getSouthWest().lat(), box.getSouthWest().lng());
 		let max = new Place(box.getNorthEast().lat(), box.getNorthEast().lng());
+
+		if (min.Long > max.Long) {
+			console.log("Wrapping arround -180º, +180º.");
+		}
+
 		let bb = new BoundingBox(min);
 		// Using expand method instead of the constructor with min anb max becaus google may mess up in some cases.
 		bb.Expand(max);

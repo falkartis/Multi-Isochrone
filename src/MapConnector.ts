@@ -1,4 +1,5 @@
-import { Place, WeightedPlace, BoundingBox } from './index.js';
+import { WeightedPlace } from './DestinationSet.js';
+import { Place, BoundingBox } from './index.js';
 
 export interface IMapConnector {
 	AddMarker(dest: WeightedPlace): void;
@@ -6,7 +7,7 @@ export interface IMapConnector {
 	ClearLines(): void;
 	DrawRedRectangle(box: BoundingBox, cost: number): void;
 	DrawDarkRectangle(box: BoundingBox): void;
-	GetBoundingBox(): BoundingBox;
+	GetBoundingBox(): BoundingBox; //TODO: could be 2 when wrapping around. Change to GetBoundingBoxes(): BoundingBox[];
 }
 
 export class ConsoleLogConnector implements IMapConnector {

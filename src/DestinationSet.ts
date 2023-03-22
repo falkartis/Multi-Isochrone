@@ -12,10 +12,31 @@ export interface IDestinationSet extends IDestination {
 	AddDestination(dest: IDestination): void;
 }
 
+export class WeightedPlace extends Place implements IDestination {
+	Weight: number;
+	Name: string;
+
+	constructor(latitude: number, longitude: number, weight: number, name?: string) {
+		super(latitude, longitude);
+		this.Name = name ?? "";
+		this.Weight = weight;
+	}
+	ComputeCostFrom(origin: Place, calc: ICostCalculator): number {
+		return 2 * calc.GetCost(origin, this); // multiply by 2 because we consider roundtrip cost.
+	}
+	ClearCostCache(): void {
+		// Nothing to do here since we don't store costs on this class.
+	}
+	GetCentroid(): Place {
+		return new Place(this.Lat, this.Long);
+	}
+}
+
 abstract class DestinationSet {
 	Destinations: IDestination[];
 	CostCache: Dictionary<Place, number>;
 	Weight: number;
+	// TODO: add name here and to the constructors
 
 	constructor(destinations: IDestination[], weight?: number) {
 		this.Destinations = destinations;
@@ -110,7 +131,7 @@ export class TwoOfThem extends DestinationSet implements IDestinationSet {
 			let secondLowestCost: number = Number.POSITIVE_INFINITY;
 			for (let destination of this.Destinations) {
 				let cost = destination.ComputeCostFrom(origin, calc) * destination.Weight;
-				if (cost < lowestCost) {
+				if (cost <= lowestCost) {
 					secondLowestCost = lowestCost;
 					lowestCost = cost;
 				}

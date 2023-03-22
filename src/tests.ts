@@ -1,8 +1,8 @@
 import { ICostCalculator, TaxicabDist, EightDirections, EuclideanDist, LatCorrectedEuclidean, HaversineDist } from './CostCalculator.js';
 import { LinearDiscretizer, LnDiscretizer, LogDiscretizer } from './Discretizer.js'
-import { Explorer, BoundingBox, Place, WeightedPlace } from './index.js';
-import { IDestination, AllDestinations } from './DestinationSet.js'
+import { IDestination, WeightedPlace, AllDestinations } from './DestinationSet.js'
 import { GoogleMapsConnector } from './GoogleMapsConnector.js'
+import { Explorer, BoundingBox, Place } from './index.js';
 import { IMapConnector } from './MapConnector.js'
 
 
