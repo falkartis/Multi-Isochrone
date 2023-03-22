@@ -72,7 +72,7 @@ export class ExtendedMarker extends google.maps.Marker implements IMarker {
 		delHtml.innerHTML = "x";
 		delHtml.addEventListener('click', () => {
 			this.setMap(null);
-			delCb(this);
+			if (delCb) delCb(this);
 		});
 
 		parent.appendChild(nameHtml);
@@ -113,9 +113,9 @@ abstract class MarkerSet implements IMarkerSet {
 
 			if ((marker as IMarkerSet).CleanMarkers) {
 				(marker as IMarkerSet).CleanMarkers();
-				// if ((marker as IMarkerSet).Markers.length > 0) {
-				// }
-				newMarkers.push(marker);
+				if ((marker as IMarkerSet).Markers.length > 0) {
+					newMarkers.push(marker);
+				}
 			} else {
 				if ((marker as ExtendedMarker).getMap() !== null) {
 					newMarkers.push(marker);
@@ -163,7 +163,6 @@ abstract class MarkerSet implements IMarkerSet {
 			callback(newval);
 		};
 
-
 		let weightHtml = document.createElement('input');
 		weightHtml.type = "number";
 		weightHtml.value = "" + this.Weight;
@@ -205,14 +204,23 @@ abstract class MarkerSet implements IMarkerSet {
 		radioHtml.addEventListener('change', (event) => {
 			if ((event.target as HTMLInputElement).checked) {
 				console.log(`Selected value: ${(event.target as HTMLInputElement).value}`);
-				radioCb(this);
+				if (radioCb) radioCb(this);
 			}
 		});
+
+		let delHtml = document.createElement('button');
+		delHtml.innerHTML = "x";
+		delHtml.addEventListener('click', () => {
+			//TODO: yeah, how do I implement this?
+			if (delCb) delCb(this);
+		});
+
 		parent.appendChild(radioHtml);
 		parent.appendChild(typeHtml);
 		parent.appendChild(nameHtml);
 		parent.appendChild(weightHtml);
 		parent.appendChild(plusHtml);
+		parent.appendChild(delHtml);
 		parent.appendChild(ulHtml);
 	}
 }

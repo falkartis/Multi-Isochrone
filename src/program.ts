@@ -255,22 +255,15 @@ class Program {
 	markerClick(marker: ExtendedMarker) {
 
 		let div = document.createElement('div');
+
 		let info = document.createElement('label');
-		let del = document.createElement('button');
-
 		info.innerHTML = "How often do you visit this place: <br>";
-
-		del.innerHTML = "delete";
-		del.style.float = "right";
-		del.addEventListener('click', () => {
-			marker.setMap(null);
-			this.CleanMarkers();
-			this.Redraw();
-		});
-
 		div.appendChild(info);
-		div.appendChild(del);
-		marker.RenderCRUD(div, n => {});
+
+		marker.RenderCRUD(div, n => {}, n => {}, m => {
+				this.CleanMarkers();
+				this.Redraw();
+		});
 
 		const infowindow = new google.maps.InfoWindow({ content: div });
 		infowindow.open(marker.getMap(), marker);
