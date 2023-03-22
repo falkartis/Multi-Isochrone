@@ -7,6 +7,7 @@ export interface IMarker {
 	GetDestination(): IDestination;
 	NiceObj(): any;
 	RenderCRUD(parent: HTMLElement, callback: (newval: IMarker) => void);
+	Name: string;
 }
 
 export interface IMarkerSet extends IMarker {
@@ -105,9 +106,9 @@ abstract class MarkerSet implements IMarkerSet {
 
 			if ((marker as IMarkerSet).CleanMarkers) {
 				(marker as IMarkerSet).CleanMarkers();
-				if ((marker as IMarkerSet).Markers.length > 0) {
-					newMarkers.push(marker);
-				}
+				// if ((marker as IMarkerSet).Markers.length > 0) {
+				// }
+				newMarkers.push(marker);
 			} else {
 				if ((marker as ExtendedMarker).getMap() !== null) {
 					newMarkers.push(marker);
@@ -184,9 +185,15 @@ abstract class MarkerSet implements IMarkerSet {
 			});
 			ulHtml.appendChild(liHtml);
 		}
+		let plusHtml = document.createElement('button');
+		plusHtml.innerHTML = "+";
+		plusHtml.addEventListener('click', () => {
+			this.AddMarker(new AllMarkers([]));
+		});
 		parent.appendChild(typeHtml);
 		parent.appendChild(nameHtml);
 		parent.appendChild(weightHtml);
+		parent.appendChild(plusHtml);
 		parent.appendChild(ulHtml);
 	}
 }

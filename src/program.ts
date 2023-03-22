@@ -212,12 +212,15 @@ class Program {
 		box.ExpandBy(80);
 
 		let shuffled = cities.map(value => ({ value, r: Math.random() })).sort((a, b) => a.r - b.r).map(({ value }) => value);
-		let any = new AnyMarker([shuffled[0], shuffled[1], shuffled[2]]);
-		let two = new TwoMarkers([shuffled[3], shuffled[4], shuffled[5]]);
-		let all = new AllMarkers([any, two]);
+
+		this.MarkerSet.Name = "Old"
+
+		let any = new AnyMarker([shuffled[0], shuffled[1], shuffled[2]], 1, "Any");
+		let two = new TwoMarkers([shuffled[3], shuffled[4], shuffled[5]], 1, "Two");
+		let all = new AllMarkers([any, two, this.MarkerSet], 1, "All");
 
 		this.MarkerSet = all;
-		this.ActiveMarkerSet = all;
+		//this.ActiveMarkerSet = all;
 		this.Redraw();
 
 		console.log("ComplexExample end.");
