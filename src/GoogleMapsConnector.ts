@@ -6,6 +6,7 @@ import { BoundingBox, Place } from './index.js';
 export interface IMarker {
 	GetDestination(): IDestination;
 	NiceObj(): any;
+	RenderCRUD(parent: HTMLElement, callback: (newval: IMarker) => void);
 }
 
 export interface IMarkerSet extends IMarker {
@@ -49,16 +50,38 @@ export class ExtendedMarker extends google.maps.Marker implements IMarker {
 	NiceObj() {
 		return {Name: this.Name, Weight: this.GetWeight()};
 	}
+	RenderCRUD(parent: HTMLElement, callback: (newval: IMarker) => void) {
+		let weightHtml = document.createElement('input');
+		weightHtml.type = "number";
+		weightHtml.value = "" + this.GetWeight();
+		weightHtml.onchange = (e) => {
+			const target = e.target as HTMLInputElement;
+			this.setLabel(target.value);
+			callback(this);
+		};
+
+		let nameHtml = document.createElement('input');
+		nameHtml.value = this.Name;
+		nameHtml.onchange = (e) => {
+			const target = e.target as HTMLInputElement;
+			this.Name = target.value;
+			callback(this);
+		};
+
+		parent.appendChild(nameHtml);
+		parent.appendChild(weightHtml);
+	}
 }
 
 abstract class MarkerSet implements IMarkerSet {
 	Markers: IMarker[];
 	Weight: number;
-	// TODO: add name here and to the constructors
+	Name: string;
 
-	constructor(markers: IMarker[], weight?: number) {
+	constructor(markers: IMarker[], weight?: number, name?: string) {
 		this.Markers = markers;
 		this.Weight = weight ?? 1;
+		this.Name = name ?? "";
 	}
 
 	abstract GetDestinationSet(): IDestinationSet;
@@ -98,7 +121,73 @@ abstract class MarkerSet implements IMarkerSet {
 			Type: this.constructor.name,
 			Weight: this.Weight,
 			Markers: this.Markers.map(m => m.NiceObj()),
+			Name: this.Name,
 		};
+	}
+	RenderCRUD(parent: HTMLElement, callback: (newval: IMarker) => void) {
+		let typeHtml = document.createElement('select');
+		let allHtml = document.createElement('option');
+		let anyHtml = document.createElement('option');
+		let twoHtml = document.createElement('option');
+		allHtml.innerHTML = "All destinations.";
+		anyHtml.innerHTML = "Only the nearest destination.";
+		twoHtml.innerHTML = "The two nearest destinations in a round trip.";
+		allHtml.value = "AllMarkers";
+		anyHtml.value = "AnyMarker";
+		twoHtml.value = "TwoMarkers";
+		if (this.constructor.name == "AllMarkers")			allHtml.selected = true;
+		if (this.constructor.name == "AnyMarker")			anyHtml.selected = true;
+		if (this.constructor.name == "TwoMarkers")			twoHtml.selected = true;
+		typeHtml.appendChild(allHtml);
+		typeHtml.appendChild(anyHtml);
+		typeHtml.appendChild(twoHtml);
+		typeHtml.onchange = (e) => {
+			let newval: IMarkerSet;
+			switch ((e.target as HTMLSelectElement).value){
+				case "AllMarkers": {	newval = new AllMarkers(this.Markers, this.Weight, this.Name);	break;	}
+				case "AnyMarker": {		newval = new AnyMarker(this.Markers, this.Weight, this.Name);	break;	}
+				case "TwoMarkers": {	newval = new TwoMarkers(this.Markers, this.Weight, this.Name);	break;	}
+				default: {
+					console.log(`Unknown value ${(e.target as HTMLSelectElement).value}.`);
+					newval = new AllMarkers(this.Markers, this.Weight);
+				}
+			}
+			callback(newval);
+		};
+
+
+		let weightHtml = document.createElement('input');
+		weightHtml.type = "number";
+		weightHtml.value = "" + this.Weight;
+		weightHtml.onchange = (e) => {
+			const target = e.target as HTMLInputElement;
+			this.Weight = +target.value;
+			callback(this);
+		};
+
+		let nameHtml = document.createElement('input');
+		nameHtml.value = this.Name;
+		nameHtml.onchange = (e) => {
+			const target = e.target as HTMLInputElement;
+			this.Name = target.value;
+			callback(this);
+		};
+
+		let ulHtml = document.createElement('ul');
+
+		for (let i = 0; i < this.Markers.length; i++) {
+			let marker = this.Markers[i];
+			let liHtml = document.createElement('li');
+			marker.RenderCRUD(liHtml, newchild => {
+				this.Markers[i] = newchild; // Will this replace the last one?
+				callback(this);
+			});
+			ulHtml.appendChild(liHtml);
+		}
+		parent.appendChild(typeHtml);
+		parent.appendChild(nameHtml);
+		parent.appendChild(weightHtml);
+		parent.appendChild(ulHtml);
 	}
 }
 

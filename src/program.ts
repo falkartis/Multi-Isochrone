@@ -53,6 +53,7 @@ class Program {
 		this.ActiveMarkerSet = this.MarkerSet;
 
 		this.ToolBar();
+		this.SideBar();
 	}
 
 	ToolBar() {
@@ -104,6 +105,21 @@ class Program {
 			this.ComplexExample();
 		});
 		topBar.appendChild(complexExample);
+	}
+	SideBar() {
+		//markerSetUI
+		let sideBar = document.getElementById("markerSetUI");
+		if (sideBar == null) {
+			throw new Error('No div with id markerSetUI found.');
+		}
+		sideBar.innerHTML = "";
+		this.MarkerSet.RenderCRUD(sideBar, newval => {
+			let newValAsSet = newval as IMarkerSet;
+			if (newValAsSet.Markers) {
+				this.MarkerSet = newValAsSet;
+			}
+			this.Redraw();
+		});
 	}
 
 	SelectDiscretizer(name: string) {		
@@ -174,12 +190,12 @@ class Program {
 
 	ComplexExample() {
 		console.log("ComplexExample start.");
-		let paris =		new ExtendedMarker(this.MapConnector.Map, 48.8603237,	 2.3106225, 1, "paris");
-		let london =	new ExtendedMarker(this.MapConnector.Map, 51.5287714,	-0.2420236, 1, "london");
-		let berlin =	new ExtendedMarker(this.MapConnector.Map, 52.50697,		13.2843069, 1, "berlin");
-		let rome =		new ExtendedMarker(this.MapConnector.Map, 41.9102411,	12.3955719, 1, "rome");
-		let barcelona =	new ExtendedMarker(this.MapConnector.Map, 41.3927754,	 2.0699778, 1, "barcelona");
-		let amsterdam =	new ExtendedMarker(this.MapConnector.Map, 52.3546527,	 4.8481785, 1, "amsterdam");
+		let paris =		new ExtendedMarker(this.MapConnector.Map, 48.8603237,	 2.3106225, 1, "Paris");
+		let london =	new ExtendedMarker(this.MapConnector.Map, 51.5287714,	-0.2420236, 1, "London");
+		let berlin =	new ExtendedMarker(this.MapConnector.Map, 52.50697,		13.2843069, 1, "Berlin");
+		let rome =		new ExtendedMarker(this.MapConnector.Map, 41.9102411,	12.3955719, 1, "Rome");
+		let barcelona =	new ExtendedMarker(this.MapConnector.Map, 41.3927754,	 2.0699778, 1, "Barcelona");
+		let amsterdam =	new ExtendedMarker(this.MapConnector.Map, 52.3546527,	 4.8481785, 1, "Amsterdam");
 
 		let cities = [paris, london, berlin, rome, barcelona, amsterdam];
 
@@ -200,16 +216,9 @@ class Program {
 		let two = new TwoMarkers([shuffled[3], shuffled[4], shuffled[5]]);
 		let all = new AllMarkers([any, two]);
 
-		console.log(all.NiceObj());
 		this.MarkerSet = all;
 		this.ActiveMarkerSet = all;
-
-		let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-
-		let dSet = this.MarkerSet.GetDestinationSet();
-
-		let explorer = new Explorer(dSet, boxSize/25, boxSize/50, this.Discretizer, this.CostCalculator, this.MapConnector);
-		explorer.Explore(box);
+		this.Redraw();
 
 		console.log("ComplexExample end.");
 	}
@@ -283,7 +292,9 @@ class Program {
 		clearTimeout(this.RedrawTimer);
 
 		this.RedrawTimer = setTimeout(()=>{
+
 			console.time('Redraw');
+			console.log(this.MarkerSet.NiceObj());
 			this.MapConnector.ClearLines();
 			explorer.DestSet.ClearCostCache();
 			
@@ -296,7 +307,9 @@ class Program {
 				//explorer.Debug = true;
 				explorer.Explore(box);
 			}
-			console.timeEnd('Redraw')
+			this.SideBar();
+			console.timeEnd('Redraw');
+
 		}, 1000);
 
 	}

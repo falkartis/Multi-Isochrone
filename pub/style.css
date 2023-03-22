@@ -17,7 +17,7 @@ body {
 }
 
 input {
-	width: 60px;
+	width: 72px;
 }
 #sideBar {
 /*	display: none;*/
@@ -49,4 +49,30 @@ input {
 }
 #topBar .cont select {
 	max-width: 120px;
+}
+#markerSetUI {
+	float: right;
+	width: 250px;
+	height: calc(100% - 50px);
+	padding: 0.5em;
+	box-sizing: border-box;
+}
+#markerSetUI select {
+	width: 50px;
+	margin: 0 2px;
+}
+#markerSetUI input {
+	border: none;
+	margin: 0 2px;
+}
+#markerSetUI input[type="number"] {
+	width: 36px;
+}
+#markerSetUI input:hover {
+	box-shadow: 0 0 0 1px grey;
+}
+#markerSetUI ul {
+	list-style-type: none;
+	margin: 0 0 1em;
+	padding-left: 1em;
 }

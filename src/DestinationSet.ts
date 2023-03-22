@@ -131,7 +131,7 @@ export class TwoOfThem extends DestinationSet implements IDestinationSet {
 			let secondLowestCost: number = Number.POSITIVE_INFINITY;
 			for (let destination of this.Destinations) {
 				let cost = destination.ComputeCostFrom(origin, calc) * destination.Weight;
-				if (cost <= lowestCost) {
+				if (cost < secondLowestCost) {
 					secondLowestCost = lowestCost;
 					lowestCost = cost;
 				}
