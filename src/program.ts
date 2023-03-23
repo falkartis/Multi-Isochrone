@@ -236,6 +236,7 @@ class Program {
 
 		this.MarkerSet = all;
 		//this.ActiveMarkerSet = all;
+		this.CleanMarkers();
 		this.Redraw();
 
 		console.log("ComplexExample end.");

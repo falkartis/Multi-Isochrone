@@ -52,7 +52,7 @@ input {
 }
 #markerSetUI {
 	float: right;
-	width: 250px;
+	width: 300px;
 	height: calc(100% - 50px);
 	padding: 0.5em;
 	box-sizing: border-box;
@@ -66,6 +66,7 @@ input {
 #markerSetUI input {
 	border: none;
 	margin: 0 2px;
+	background: none;
 }
 #markerSetUI input[type="number"] {
 	width: 36px;
@@ -73,13 +74,23 @@ input {
 #markerSetUI input[type="radio"] {
 	width: auto;
 }
-#markerSetUI input:hover {
+#markerSetUI input:hover,
+#markerSetUI select:hover {
 	box-shadow: 0 0 0 1px grey;
 }
 #markerSetUI ul {
 	list-style-type: none;
 	margin: 0 0 1em;
 	padding-left: 1em;
+}
+#markerSetUI li {
+	padding: 2px 4px;
+}
+#markerSetUI ul li:nth-child(2n + 1) {
+	background: #EEF;
+}
+#markerSetUI ul li:nth-child(2n) {
+	background: #FFF;
 }
 .CostLabel {
 	text-shadow: 0 0 1px black, 0 0 3px white;
