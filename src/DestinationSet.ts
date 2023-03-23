@@ -1,6 +1,6 @@
 import { ICostCalculator } from './CostCalculator.js';
-import { Place, BoundingBox } from './index.js';
 import { Dictionary } from './Dictionary.js';
+import { Place } from './index.js';
 
 export interface IDestination {
 	ComputeCostFrom(origin: Place, calc: ICostCalculator): number;

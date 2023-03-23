@@ -1,7 +1,7 @@
-import { IDestination, IDestinationSet, AllDestinations, AnyDestination, TwoOfThem } from './DestinationSet.js';
-import { WeightedPlace } from './DestinationSet.js';
+import { IDestination, WeightedPlace, IDestinationSet, AllDestinations, AnyDestination, TwoOfThem } from './DestinationSet.js';
 import { IMapConnector } from './MapConnector.js';
-import { BoundingBox, Place } from './index.js';
+import { BoundingBox } from './BoundingBox.js';
+import { Place } from './index.js';
 
 export interface IMarker {
 	GetDestination(): IDestination;

@@ -2,8 +2,10 @@ import { ICostCalculator, TaxicabDist, EightDirections, EuclideanDist, LatCorrec
 import { LinearDiscretizer, LnDiscretizer, LogDiscretizer } from './Discretizer.js'
 import { IDestination, WeightedPlace, AllDestinations } from './DestinationSet.js'
 import { GoogleMapsConnector } from './GoogleMapsConnector.js'
-import { Explorer, BoundingBox, Place } from './index.js';
 import { IMapConnector } from './MapConnector.js'
+import { BoundingBox } from './BoundingBox.js';
+import { Explorer } from './Explorer.js';
+import { Place } from './index.js';
 
 
 // TODO: tidy this up

@@ -2,7 +2,9 @@ import { ICostCalculator, TaxicabDist, EightDirections, EuclideanDist, LatCorrec
 import { GoogleMapsConnector, IMarkerSet, IMarker, ExtendedMarker, AllMarkers, AnyMarker, TwoMarkers } from './GoogleMapsConnector.js';
 import { IDiscretizer, LinearDiscretizer, LnDiscretizer, Log10Discretizer, Log2Discretizer, SqrtDiscretizer } from './Discretizer.js';
 import { IDestination, IDestinationSet, WeightedPlace, AllDestinations, AnyDestination, TwoOfThem } from './DestinationSet.js';
-import { BoundingBox, Explorer, Place } from './index.js';
+import { BoundingBox } from './BoundingBox.js';
+import { Explorer } from './Explorer.js';
+import { Place } from './index.js';
 
 
 function initMap() {
