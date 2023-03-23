@@ -282,12 +282,21 @@ export class GoogleMapsConnector implements IMapConnector {
 
 		let mark = new google.maps.Marker({
 			position: newlatLng,
-			label: { text: cost.toFixed(2) },
+			label: { text: cost.toFixed(2), color: this.MakeColor(cost), className: "CostLabel" },
 			map: this.Map,
 			// Shortest possible transparent pixel:
 			icon: { url: "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" }
 		});
 		this.AddedLabels.set(cost, mark);
+	}
+
+	MakeColor(cost: number) {
+		const color = Math.round(499 * (1 + Math.sin(cost)));
+		let colorStr: string = "" + color;
+		if (color < 100) colorStr = "0" + colorStr;
+		if (color < 10) colorStr = "0" + colorStr;
+		if (color < 1) colorStr = "0" + colorStr;
+		return "#" + colorStr
 	}
 
 	AddLine(p1: Place, p2: Place, cost: number) {
@@ -301,9 +310,9 @@ export class GoogleMapsConnector implements IMapConnector {
 			// geodesic: does it go faster when set to false?
 			// geodesic: does it look more precise when set to true?
 			geodesic: false,
-			strokeColor: "#411",
-			strokeOpacity: 0.6,
-			strokeWeight: 2,
+			strokeColor: this.MakeColor(cost),
+			strokeOpacity: 0.8,
+			strokeWeight: 2.5,
 			draggable: true,
 		});
 		let toAdd = true;

@@ -81,3 +81,7 @@ input {
 	margin: 0 0 1em;
 	padding-left: 1em;
 }
+.CostLabel {
+	text-shadow: 0 0 1px black, 0 0 3px white;
+	font-size: 16px !important;
+}

@@ -65,26 +65,26 @@ export class BoundingBox {
 	get SizeLat() { return this.Max.Lat - this.Min.Lat; }
 	get SizeLong() { return this.Max.Long - this.Min.Long; }
 
-	//ChatGPT generated Grid method to be tested:
-	Grid(rows: number, cols: number): Place[][] {
-		const grid: Place[][] = [];
-		const dLat = this.SizeLat / (rows - 1);
-		const dLong = this.SizeLong / (cols - 1);
+	Edges(rows: number, cols: number): Place[] {
+		
+		const latInterval = this.SizeLat / rows;
+		const longInterval = this.SizeLong / cols;
 
-		for (let i = 0; i < rows; i++) {
-			const row: Place[] = [];
-
-			for (let j = 0; j < cols; j++) {
-				const lat = this.Min.Lat + dLat * i;
-				const long = this.Min.Long + dLong * j;
-				row.push(new Place(lat, long));
-			}
-			grid.push(row);
+		const result: Place[] = [];
+		for (let i = 0; i <= rows; i++) {
+			const lat = this.Min.Lat + i * latInterval;
+			result.push(new Place(lat, this.Min.Long));
+			result.push(new Place(lat, this.Max.Long));
 		}
-
-		return grid;
+		// Second loop has two less iterations to avoid repeating corners.
+		for (let i = 1; i < cols; i++) {
+			const long = this.Min.Long + i * longInterval;
+			result.push(new Place(this.Min.Lat, long));
+			result.push(new Place(this.Max.Lat, long));
+		}
+		return result;
 	}
-	//ChatGPT generated BoxGrid method to be tested:
+
 	BoxGrid(rows: number, cols: number): BoundingBox[] {
 		const grid: BoundingBox[] = [];
 		const dLat = this.SizeLat / rows;
@@ -173,32 +173,33 @@ export class Explorer {
 		this.MinSize = v;
 	}
 
-	DrawLine(p1: Place, c1: number, p2: Place, c2: number, p3: Place, c3: number, p4: Place, c4: number, qMin: number) {
+	DrawLine(p: Place[], c: number[], discVal: number) {
 
-		let v1: number = c1 - qMin;
-		let v2: number = c2 - qMin;
-		let v3: number = c3 - qMin;
-		let v4: number = c4 - qMin;
+		let v: number[] = c.map( cost => cost - discVal);
+
 		let index: number = 0;
-		index += 1 * (+(v1 > 0));
-		index += 2 * (+(v2 > 0));
-		index += 4 * (+(v3 > 0));
-		index += 8 * (+(v4 > 0));
+		index += 1 * (+(v[0] > 0));
+		index += 2 * (+(v[1] > 0));
+		index += 4 * (+(v[2] > 0));
+		index += 8 * (+(v[3] > 0));
 
 		let l1: Place|null = null;
 		let l2: Place|null = null;
 		switch (index) {
 			// CORNERS:
-			case 1:		case 14:	l1 = Interpolate(p1, p2, v1, v2);	l2 = Interpolate(p1, p4, v1, v4);	break;
-			case 2:		case 13:	l1 = Interpolate(p2, p1, v2, v1);	l2 = Interpolate(p2, p3, v2, v3);	break;
-			case 4:		case 11:	l1 = Interpolate(p3, p2, v3, v2);	l2 = Interpolate(p3, p4, v3, v4);	break;
-			case 7:		case 8:		l1 = Interpolate(p4, p1, v4, v1);	l2 = Interpolate(p4, p3, v4, v3);	break;
+			case 1:		case 14:	l1 = Interpolate(p[0], p[1], v[0], v[1]);	l2 = Interpolate(p[0], p[3], v[0], v[3]);	break;
+			case 2:		case 13:	l1 = Interpolate(p[1], p[0], v[1], v[0]);	l2 = Interpolate(p[1], p[2], v[1], v[2]);	break;
+			case 4:		case 11:	l1 = Interpolate(p[2], p[1], v[2], v[1]);	l2 = Interpolate(p[2], p[3], v[2], v[3]);	break;
+			case 7:		case 8:		l1 = Interpolate(p[3], p[0], v[3], v[0]);	l2 = Interpolate(p[3], p[2], v[3], v[2]);	break;
 			// LINE THROUGH:
-			case 6:		case 9:		l1 = Interpolate(p1, p2, v1, v2);	l2 = Interpolate(p3, p4, v3, v4);	break;
-			case 3:		case 12:	l1 = Interpolate(p1, p4, v1, v4);	l2 = Interpolate(p2, p3, v2, v3);	break;
-			// SADDLE POINT (not expected here):
+			case 6:		case 9:		l1 = Interpolate(p[0], p[1], v[0], v[1]);	l2 = Interpolate(p[2], p[3], v[2], v[3]);	break;
+			case 3:		case 12:	l1 = Interpolate(p[0], p[3], v[0], v[3]);	l2 = Interpolate(p[1], p[2], v[1], v[2]);	break;
+			// SADDLE POINT:
 			case 5:
 			case 10:
+				if (this.Debug) console.log("Saddle point not implemented.");
+				//TODO: implement saddle point.
+				break;
 			// ALL EQUAL, SOLID COLOR, (Case handled somewhere else):
 			case 0:
 			case 15:
@@ -206,35 +207,29 @@ export class Explorer {
 				break;
 		}
 		if (l1 == null || l2 == null) {
-			if (this.Debug) console.log({v1, v2, v3, v4, qMin, index});
+			if (this.Debug) console.log({v, discVal, index});
 		} else {
-			this.Map.AddLine(l1, l2, qMin);
+			this.Map.AddLine(l1, l2, discVal);
 		}
 	}
 
-	AllEqual(first: number, ...values: number[]) {
-		for (let val of values) {
-			if (val != first)
-				return false;
-		}
-		return true;
+	AllEqual(...args: number[]) {
+		return args.every((val, i, arr) => val === arr[0]);
 	}
 
-	FindLines(	p1: Place,	p2: Place,	p3: Place,	p4: Place,
-				c1: number, c2: number, c3: number, c4: number,
-				d1: number, d2: number, d3: number, d4: number) {
+	FindLines(p: Place[], c: number[], d: number[]) {
 
 		let vals = new Map<number, number>();
-		vals.set(d1, 1);
-		vals.set(d2, 1);
-		vals.set(d3, 1);
-		vals.set(d4, 1);
+		vals.set(d[0], 1);
+		vals.set(d[1], 1);
+		vals.set(d[2], 1);
+		vals.set(d[3], 1);
 
-		let max = Math.max(d1, d2, d3, d4);
+		let max = Math.max(d[0], d[1], d[2], d[3]);
 
 		for (let cost of vals.keys()) {
 			if (cost != max)
-				this.DrawLine(p1, c1, p2, c2, p3, c3, p4, c4, cost);
+				this.DrawLine(p, c, cost);
 		}
 	}
 
@@ -249,20 +244,28 @@ export class Explorer {
 			return;
 		}
 
-		let p: Place[] = [box.SW, box.NW, box.NE, box.SE, box.CW, box.NC, box.CE, box.SC, box.Center];
-		let c: number[] = p.map(place => this.ComputeCost(place));
-		let d: number[] = c.map(cost => this.Discretizer.Discretize(cost));
+		let edges: Place[];
+		if (box.SizeLat > box.SizeLong) {
+			edges = box.Edges(9, 6);
+		} else {
+			edges = box.Edges(6, 9);
+		}
+		edges.push(box.Center);
+		let edgesCosts: number[] = edges.map(place => this.ComputeCost(place));
+		let edgesDiscrete: number[] = edgesCosts.map(cost => this.Discretizer.Discretize(cost));
+		let edgesEqual = this.AllEqual(...edgesDiscrete);
 
-		let nineEqual = this.AllEqual(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8]);
-
-		if (nineEqual) {
-			if (this.Debug) this.Map.DrawRedRectangle(box, c[8]);
+		if (edgesEqual) {
+			if (this.Debug) this.Map.DrawRedRectangle(box, edgesCosts[0]);
 			return;
 		}
 
 		if (box.SizeLat < this.MinSize && box.SizeLong < this.MinSize) {
 			if (this.Debug) this.Map.DrawDarkRectangle(box);
-			this.FindLines(p[0], p[1], p[2], p[3], c[0], c[1], c[2], c[3], d[0], d[1], d[2], d[3]);
+			let corners: Place[] = [box.SW, box.NW, box.NE, box.SE];
+			let cornersCosts: number[] = corners.map(place => this.ComputeCost(place));
+			let cornersDiscrete: number[] = cornersCosts.map(cost => this.Discretizer.Discretize(cost));
+			this.FindLines(corners, cornersCosts, cornersDiscrete);
 			return;
 		}
 

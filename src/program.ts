@@ -16,6 +16,7 @@ window.addEventListener('load', function() {
 class Program {
 
 	RedrawTimer: ReturnType<typeof setTimeout>;
+	Redrawing: boolean;
 	MapConnector: GoogleMapsConnector;
 	Discretizer: IDiscretizer;
 	DiscretizerStep: number;
@@ -41,6 +42,7 @@ class Program {
 		map.addListener("dragend",		() => { this.Redraw(); });
 
 		this.RedrawTimer = setTimeout(()=>{ console.log("RedrawTimer"); }, 1);
+		this.Redrawing = false;
 		this.MapConnector = new GoogleMapsConnector(map);
 		this.CostCalculator = new HaversineDist();
 		this.DiscretizerOffset = 0;
@@ -148,6 +150,7 @@ class Program {
 		}
 		case "LogDiscretizer": {
 			console.log("Technical debt: get the base somehow!"); // UI parameter
+			//TODO: Get base from UI.
 			//this.Discretizer = new LogDiscretizer(base, this.DiscretizerStep, this.DiscretizerOffset);
 			break;
 		}
@@ -178,8 +181,12 @@ class Program {
 			break;
 		}
 		case "LatCorrectedEuclidean": {
-			console.log("Technical debt: get the latitude somehow!");
-			//this.CostCalculator = new LatCorrectedEuclidean(lat);
+			const boxes = this.MapConnector.GetBoundingBoxes();
+			if (boxes.length > 0) {
+				const box = boxes[0];
+				const lat = box.Center.Lat;
+				this.CostCalculator = new LatCorrectedEuclidean(lat);
+			}
 			break;
 		}
 		case "HaversineDist": {
@@ -285,27 +292,32 @@ class Program {
 
 		clearTimeout(this.RedrawTimer);
 
-		this.RedrawTimer = setTimeout(()=>{
+		if (!this.Redrawing) {
 
-			console.time('Redraw');
-			console.log(this.MarkerSet.NiceObj());
-			this.MapConnector.ClearLines();
-			explorer.DestSet.ClearCostCache();
-			
-			let boxes: BoundingBox[] = this.MapConnector.GetBoundingBoxes();
-			
-			for (let box of boxes) {
-				let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-				explorer.SetMaxSize(boxSize/10);
-				explorer.SetMinSize(boxSize/80);
-				//explorer.Debug = true;
-				explorer.Explore(box);
-			}
-			this.SideBar();
-			console.timeEnd('Redraw');
+			this.RedrawTimer = setTimeout(()=>{
 
-		}, 1000);
+				console.time('Redraw');
+				this.Redrawing = true;
+				//console.log(this.MarkerSet.NiceObj());
+				this.MapConnector.ClearLines();
+				explorer.DestSet.ClearCostCache();
+				
+				let boxes: BoundingBox[] = this.MapConnector.GetBoundingBoxes();
+				
+				for (let box of boxes) {
+					box.ExpandBy(20);
+					let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
+					explorer.SetMaxSize(boxSize/2);
+					explorer.SetMinSize(boxSize/30);
+					//explorer.Debug = true;
+					explorer.Explore(box);
+				}
+				this.SideBar();
+				this.Redrawing = false;
+				console.timeEnd('Redraw');
 
+			}, 1000);
+		}
 	}
 }
 
