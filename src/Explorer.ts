@@ -126,10 +126,10 @@ export class Explorer {
 			}
 		}
 
-		for (let place of edges) {
-			const cost = await this.ComputeCost(place);
-			edgesCosts.push(cost);
-		}
+		// for (let place of edges) {
+		// 	const cost = await this.ComputeCost(place);
+		// 	edgesCosts.push(cost);
+		// }
 
 		let edgesDiscrete: number[] = edgesCosts.map(cost => this.Discretizer.Discretize(cost));
 		let edgesEqual = this.AllEqual(...edgesDiscrete);

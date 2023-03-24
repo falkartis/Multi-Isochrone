@@ -55,23 +55,6 @@ abstract class DestinationSet {
 		}
 	}
 
-	// CacheThis(origin: Place, callback: (key: Place) => Promise<number>): Promise<number> {
-	// 	return new Promise<number> ((resolve, reject) => {
-
-	// 		const cached = this.CostCache.Get(origin);
-	// 		if (cached != undefined){
-	// 			resolve(cached);
-	// 			return;
-	// 		}
-
-	// 		callback(origin).then(cost => {
-
-	// 			this.CostCache.Add(origin, cost);
-	// 			resolve(cost);
-	// 		});
-	// 	});
-	// }
-
 	async CacheThis(origin: Place, callback: (key: Place) => Promise<number>): Promise<number> {
 		const cached = this.CostCache.Get(origin);
 		if (cached !== undefined) {
@@ -79,7 +62,14 @@ abstract class DestinationSet {
 		}
 
 		const cost = await callback(origin);
-		this.CostCache.Add(origin, cost);
+
+		
+		try {
+			this.CostCache.Add(origin, cost);
+		} catch(error) {
+			// Logging it is to hard if doing so hundreds of times.
+			//console.log("Cache raced.");
+		}
 		return cost;
 	}
 
@@ -112,7 +102,7 @@ export class AllDestinations extends DestinationSet implements IDestinationSet {
 
 		return await this.CacheThis(origin, orig => {
 			return new Promise<number>((resolve, reject) => {
-				return this.InternComputeCostFrom(origin, calc);
+				resolve(this.InternComputeCostFrom(origin, calc));
 			});
 		});
 	}
@@ -120,9 +110,13 @@ export class AllDestinations extends DestinationSet implements IDestinationSet {
 	async InternComputeCostFrom(origin: Place, calc: ICostCalculator) {	
 		let totalCost: number = 0;
 		for (let destination of this.Destinations) {
-			let cost = await destination.ComputeCostFrom(origin, calc);
-			let costWeight = cost * destination.Weight;
-			totalCost += costWeight;
+			try {
+				let cost = await destination.ComputeCostFrom(origin, calc);
+				let costWeight = cost * destination.Weight;
+				totalCost += costWeight;
+			} catch (error) {
+				console.error(`Error in InternComputeCostFrom ${origin} ${calc}: ${error}`);
+			}
 		}
 		return totalCost;
 	}
@@ -137,7 +131,7 @@ export class AnyDestination extends DestinationSet implements IDestinationSet {
 	async ComputeCostFrom(origin: Place, calc: ICostCalculator) {
 		return await this.CacheThis(origin, orig => {
 			return new Promise<number>((resolve, reject) => {
-				return this.InternComputeCostFrom(origin, calc);
+				resolve(this.InternComputeCostFrom(origin, calc));
 			});
 
 		});
@@ -163,7 +157,7 @@ export class TwoOfThem extends DestinationSet implements IDestinationSet {
 	async ComputeCostFrom(origin: Place, calc: ICostCalculator) {
 		return await this.CacheThis(origin, orig => {
 			return new Promise<number> ((resolve, reject) => {
-				return this.InternComputeCostFrom(origin, calc);
+				resolve(this.InternComputeCostFrom(origin, calc));
 			});
 		});
 	}

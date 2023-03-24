@@ -14,8 +14,7 @@ export class Dictionary<TKey extends IHashCode, TValue> {
 	Add(key: TKey, value: TValue) {
 
 		if (this.ContainsKey(key)) {
-			console.log(key);
-			throw new Error("Dictionary already contains key!");
+			throw new Error("Dictionary already contains key!", { key, value });
 		}
 		
 		let hc: number = key.GetHashCode();

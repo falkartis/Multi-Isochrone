@@ -313,7 +313,7 @@ class Program {
 					let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 					explorer.SetMaxSize(boxSize/2);
 					explorer.SetMinSize(boxSize/30);
-					explorer.Debug = true;
+					//explorer.Debug = true;
 					explorer.Explore(box);
 				}
 				this.SideBar();
