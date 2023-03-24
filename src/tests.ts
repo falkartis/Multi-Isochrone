@@ -72,7 +72,7 @@ let RedrawTimer: ReturnType<typeof setTimeout>;
 // TESTS:
 export class Tests {
 
-	public static testTotalCost() {
+	public static async testTotalCost() {
 		let destinations: WeightedPlace[] = [
 			new WeightedPlace(1, 0, 1),
 			new WeightedPlace(0, 1, 2),
@@ -81,14 +81,14 @@ export class Tests {
 		];
 		let dSet: IDestination = new AllDestinations(destinations);
 		let calc: ICostCalculator = new EuclideanDist();
-		let tCost: number = dSet.ComputeCostFrom(new Place(0,0), calc);
+		let tCost: number = await dSet.ComputeCostFrom(new Place(0,0), calc);
 		if (tCost == 10) {
 			console.log("10 is OK");
 		} else {
 			console.log("Total cost is: " + tCost + "\n Expected 10.");
 		}
 	}
-	public static testRealPlaces() {
+	public static async testRealPlaces() {
 		let barcelona:	WeightedPlace = new WeightedPlace(41.3927754,	 2.0699778, 1);
 		let paris:		WeightedPlace = new WeightedPlace(48.8589465,	 2.2768239, 6);
 		let berlin:		WeightedPlace = new WeightedPlace(52.50697,		13.2843069, 2);
@@ -98,15 +98,15 @@ export class Tests {
 		let origin: Place = new Place(46.8730811, 3.2886396);
 		let costCalc: ICostCalculator = new HaversineDist();
 		console.log({barcelona, paris, berlin, zurich, dSet, origin, costCalc});
-		let tCost: number = dSet.ComputeCostFrom(origin, costCalc);
+		let tCost: number = await dSet.ComputeCostFrom(origin, costCalc);
 		console.log("Total cost: " + tCost + "Km");
 		let centroid: Place = dSet.GetCentroid();
 		console.log(centroid);
-		let tCost2: number = dSet.ComputeCostFrom(centroid, costCalc);
+		let tCost2: number = await dSet.ComputeCostFrom(centroid, costCalc);
 		console.log("Total cost: " + tCost2 + "Km");
 
 	}
-	public static testExplore() {
+	public static async testExplore() {
 		console.log("testExplore() start");
 		let paris:		WeightedPlace = new WeightedPlace(48.8589465,	 2.2768239, 7);
 		let berlin:		WeightedPlace = new WeightedPlace(52.50697,		13.2843069, 7);
@@ -128,7 +128,7 @@ export class Tests {
 
 		let costCalc: ICostCalculator = new HaversineDist();
 		//let costCalc: CostCalculator = new LatCorrectedEuclideanDistance(centroid.Place.Lat);
-		let centroidCost: number = dSet.ComputeCostFrom(centroidP, costCalc);
+		let centroidCost: number = await dSet.ComputeCostFrom(centroidP, costCalc);
 		mapConn.AddMarker(centroidWP);
 		console.log({centroidCost});
 

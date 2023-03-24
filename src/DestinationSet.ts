@@ -3,7 +3,7 @@ import { Dictionary } from './Dictionary.js';
 import { Place } from './index.js';
 
 export interface IDestination {
-	ComputeCostFrom(origin: Place, calc: ICostCalculator): number;
+	ComputeCostFrom(origin: Place, calc: ICostCalculator): Promise<number>;
 	ClearCostCache(): void;
 	GetCentroid(): Place;
 	get Weight(): number;
@@ -21,9 +21,13 @@ export class WeightedPlace extends Place implements IDestination {
 		this.Name = name ?? "";
 		this.Weight = weight;
 	}
-	ComputeCostFrom(origin: Place, calc: ICostCalculator): number {
-		return 2 * calc.GetCost(origin, this); // multiply by 2 because we consider roundtrip cost.
+	async ComputeCostFrom(origin: Place, calc: ICostCalculator): Promise<number> {
+		const cost = await calc.GetCost(origin, this);
+		return 2 * cost; // multiply by 2 because we consider roundtrip cost.
+		
+		// return calc.GetCost(origin, this).then(cost => 2 * cost); // alternative form
 	}
+
 	ClearCostCache(): void {
 		// Nothing to do here since we don't store costs on this class.
 	}
@@ -51,16 +55,34 @@ abstract class DestinationSet {
 		}
 	}
 
-	CacheThis(origin: Place, callback: (key: Place) => number) {
-		let cached = this.CostCache.Get(origin);
-		if (cached != undefined)
+	// CacheThis(origin: Place, callback: (key: Place) => Promise<number>): Promise<number> {
+	// 	return new Promise<number> ((resolve, reject) => {
+
+	// 		const cached = this.CostCache.Get(origin);
+	// 		if (cached != undefined){
+	// 			resolve(cached);
+	// 			return;
+	// 		}
+
+	// 		callback(origin).then(cost => {
+
+	// 			this.CostCache.Add(origin, cost);
+	// 			resolve(cost);
+	// 		});
+	// 	});
+	// }
+
+	async CacheThis(origin: Place, callback: (key: Place) => Promise<number>): Promise<number> {
+		const cached = this.CostCache.Get(origin);
+		if (cached !== undefined) {
 			return cached;
+		}
 
-		const cost = callback(origin);
-
+		const cost = await callback(origin);
 		this.CostCache.Add(origin, cost);
 		return cost;
 	}
+
 
 	GetCentroid() {
 		let lats: number = 0;
@@ -86,18 +108,25 @@ export class AllDestinations extends DestinationSet implements IDestinationSet {
 		super(destinations, weight);
 	}
 
-	ComputeCostFrom(origin: Place, calc: ICostCalculator) {
+	async ComputeCostFrom(origin: Place, calc: ICostCalculator) {
 
-		return this.CacheThis(origin, orig => {
-
-			let totalCost: number = 0;
-			for (let destination of this.Destinations) {
-				let cost = destination.ComputeCostFrom(origin, calc) * destination.Weight;
-				totalCost += cost;
-			}
-			return totalCost;
+		return await this.CacheThis(origin, orig => {
+			return new Promise<number>((resolve, reject) => {
+				return this.InternComputeCostFrom(origin, calc);
+			});
 		});
 	}
+
+	async InternComputeCostFrom(origin: Place, calc: ICostCalculator) {	
+		let totalCost: number = 0;
+		for (let destination of this.Destinations) {
+			let cost = await destination.ComputeCostFrom(origin, calc);
+			let costWeight = cost * destination.Weight;
+			totalCost += costWeight;
+		}
+		return totalCost;
+	}
+
 }
 
 export class AnyDestination extends DestinationSet implements IDestinationSet {
@@ -105,17 +134,24 @@ export class AnyDestination extends DestinationSet implements IDestinationSet {
 	constructor(destinations: IDestination[], weight?: number) {
 		super(destinations, weight);
 	}
-	ComputeCostFrom(origin: Place, calc: ICostCalculator) {
-		return this.CacheThis(origin, orig => {
+	async ComputeCostFrom(origin: Place, calc: ICostCalculator) {
+		return await this.CacheThis(origin, orig => {
+			return new Promise<number>((resolve, reject) => {
+				return this.InternComputeCostFrom(origin, calc);
+			});
 
-			let lowestCost: number = Number.POSITIVE_INFINITY;
-			for (let destination of this.Destinations) {
-				let cost = destination.ComputeCostFrom(origin, calc) * destination.Weight;
-				if (cost < lowestCost)
-					lowestCost = cost;
-			}
-			return lowestCost;
 		});
+	}
+
+	async InternComputeCostFrom(origin: Place, calc: ICostCalculator) {
+		let lowestCost: number = Number.POSITIVE_INFINITY;
+		for (let destination of this.Destinations) {
+			let cost = await destination.ComputeCostFrom(origin, calc);
+			let costWeight = cost * destination.Weight;
+			if (cost < lowestCost)
+				lowestCost = cost;
+		}
+		return lowestCost;
 	}
 }
 
@@ -124,22 +160,28 @@ export class TwoOfThem extends DestinationSet implements IDestinationSet {
 	constructor(destinations: IDestination[], weight?: number) {
 		super(destinations, weight);
 	}
-	ComputeCostFrom(origin: Place, calc: ICostCalculator) {
-		return this.CacheThis(origin, orig => {
-
-			let lowestCost: number = Number.POSITIVE_INFINITY;
-			let secondLowestCost: number = Number.POSITIVE_INFINITY;
-			for (let destination of this.Destinations) {
-				let cost = destination.ComputeCostFrom(origin, calc) * destination.Weight;
-				if (cost < secondLowestCost) {
-					secondLowestCost = lowestCost;
-					lowestCost = cost;
-				}
-			}
-			if (secondLowestCost == Number.POSITIVE_INFINITY)
-				return lowestCost;
-			else
-				return (lowestCost + secondLowestCost) / 2; // Divide by 2 because here we consider a circular path.
+	async ComputeCostFrom(origin: Place, calc: ICostCalculator) {
+		return await this.CacheThis(origin, orig => {
+			return new Promise<number> ((resolve, reject) => {
+				return this.InternComputeCostFrom(origin, calc);
+			});
 		});
+	}
+
+	async InternComputeCostFrom(origin: Place, calc: ICostCalculator) {
+		let lowestCost: number = Number.POSITIVE_INFINITY;
+		let secondLowestCost: number = Number.POSITIVE_INFINITY;
+		for (let destination of this.Destinations) {
+			let cost = await destination.ComputeCostFrom(origin, calc);
+			let costWeight = cost * destination.Weight;
+			if (cost < secondLowestCost) {
+				secondLowestCost = lowestCost;
+				lowestCost = cost;
+			}
+		}
+		if (secondLowestCost == Number.POSITIVE_INFINITY)
+			return lowestCost;
+		else
+			return (lowestCost + secondLowestCost) / 2; // Divide by 2 because here we consider a circular path.		
 	}
 }

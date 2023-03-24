@@ -94,11 +94,13 @@ export class Explorer {
 		}
 	}
 
-	ComputeCost(p: Place) {
-		return this.DestSet.ComputeCostFrom(p, this.CostCalculator);
+	async ComputeCost(p: Place) {
+		return await this.DestSet.ComputeCostFrom(p, this.CostCalculator);
 	}
 
-	Explore(box: BoundingBox) {
+	async Explore(box: BoundingBox): Promise<void> {
+
+		if (this.Debug) console.log({SizeLat: box.SizeLat, SizeLong: box.SizeLong});
 
 		if (box.SizeLat > this.MaxSize || box.SizeLong > this.MaxSize) {
 			this.Divide(box);
@@ -112,7 +114,23 @@ export class Explorer {
 			edges = box.Edges(6, 9);
 		}
 		edges.push(box.Center);
-		let edgesCosts: number[] = edges.map(place => this.ComputeCost(place));
+
+		let edgesCosts: number[] = [];
+
+		for (let place of edges) {
+			try {
+				const cost = await this.ComputeCost(place);
+				edgesCosts.push(cost);
+			} catch (error) {
+				console.error(`Error computing cost for ${place}: ${error}`);
+			}
+		}
+
+		for (let place of edges) {
+			const cost = await this.ComputeCost(place);
+			edgesCosts.push(cost);
+		}
+
 		let edgesDiscrete: number[] = edgesCosts.map(cost => this.Discretizer.Discretize(cost));
 		let edgesEqual = this.AllEqual(...edgesDiscrete);
 
@@ -124,7 +142,11 @@ export class Explorer {
 		if (box.SizeLat < this.MinSize && box.SizeLong < this.MinSize) {
 			if (this.Debug) this.Map.DrawDarkRectangle(box);
 			let corners: Place[] = [box.SW, box.NW, box.NE, box.SE];
-			let cornersCosts: number[] = corners.map(place => this.ComputeCost(place));
+			let cornersCosts: number[] = [];
+			for (let place of corners) {
+				const cost = await this.ComputeCost(place);
+				cornersCosts.push(cost);
+			}
 			let cornersDiscrete: number[] = cornersCosts.map(cost => this.Discretizer.Discretize(cost));
 			this.FindLines(corners, cornersCosts, cornersDiscrete);
 			return;
