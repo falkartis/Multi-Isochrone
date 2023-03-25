@@ -1,6 +1,8 @@
 import { ICostCalculator } from './CostCalculator.js';
 import { Dictionary } from './Dictionary.js';
+import { CostMatrix } from './CostMatrix.js';
 import { Place } from './index.js';
+
 
 export interface IDestination {
 	ComputeCostFrom(origin: Place, calc: ICostCalculator): Promise<number>;
@@ -9,7 +11,6 @@ export interface IDestination {
 	get Weight(): number;
 }
 export interface IDestinationSet extends IDestination {
-	//ComputeCostsFrom(origins: Place[], calc: ICostCalculator): Promise<number[]>;
 	AddDestination(dest: IDestination): void;
 }
 
@@ -36,7 +37,7 @@ export class WeightedPlace extends Place implements IDestination {
 	}
 }
 
-abstract class DestinationSet {
+abstract class DestinationSet implements IDestinationSet {
 	readonly Destinations: IDestination[];
 	readonly CostCache: Dictionary<Place, number>;
 	readonly Weight: number;
@@ -95,23 +96,49 @@ abstract class DestinationSet {
 
 	abstract AggregateCosts(costs: number[]): number;
 
+	ComputeCostsFrom(origins: Place[], costMatrix: CostMatrix): number[] {
+		const allCosts: number[] = [];
+
+		for (const origin of origins) {
+			let costs: number[] = [];
+			for (const destination of this.Destinations) {
+				if (destination instanceof DestinationSet) {
+					costs.push(destination.ComputeCostsFrom([origin], costMatrix)[0]);
+				} else if (destination instanceof WeightedPlace) {
+					const destinationCost = costMatrix.get(origin, destination);
+					if (destinationCost === undefined) {
+						throw new Error("Expected costMatrix to be filled.");
+					}
+					costs.push(destination.Weight * destinationCost);
+				} else {
+					console.log({destination});
+					throw new Error("What kind of IDestination is this?");
+				}
+			}
+			let cost = this.AggregateCosts(costs);
+			allCosts.push(cost);
+		}
+
+		return allCosts;
+	}
+
 }
 
-export class AllDestinations extends DestinationSet implements IDestinationSet {
+export class AllDestinations extends DestinationSet {
 
 	AggregateCosts(costs: number[]): number {
 		return costs.reduce((totalCost, cost) => totalCost + cost, 0);
 	}
 }
 
-export class AnyDestination extends DestinationSet implements IDestinationSet {
+export class AnyDestination extends DestinationSet {
 
 	AggregateCosts(costs: number[]): number {
 		return Math.min(...costs);
 	}
 }
 
-export class TwoOfThem extends DestinationSet implements IDestinationSet {
+export class TwoOfThem extends DestinationSet {
 
 	AggregateCosts(costs: number[]): number {
 		let lowestCost: number = Number.POSITIVE_INFINITY;
