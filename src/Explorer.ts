@@ -94,17 +94,16 @@ export class Explorer {
 		}
 	}
 
-	async ComputeCost(p: Place) {
-		return await this.DestSet.ComputeCostFrom(p, this.CostCalculator);
+	ComputeCost(p: Place): Promise<number> {
+		return this.DestSet.ComputeCostFrom(p, this.CostCalculator);
 	}
 
-	async Explore(box: BoundingBox): Promise<void> {
+	Explore(box: BoundingBox): Promise<void> {
 
 		if (this.Debug) console.log({SizeLat: box.SizeLat, SizeLong: box.SizeLong});
 
 		if (box.SizeLat > this.MaxSize || box.SizeLong > this.MaxSize) {
-			this.Divide(box);
-			return;
+			return this.Divide(box);
 		}
 
 		let edges: Place[];
@@ -115,54 +114,47 @@ export class Explorer {
 		}
 		edges.push(box.Center);
 
-		let edgesCosts: number[] = [];
+		let edgeCostPromises = edges.map(place => this.ComputeCost(place));
 
-		for (let place of edges) {
-			try {
-				const cost = await this.ComputeCost(place);
-				edgesCosts.push(cost);
-			} catch (error) {
-				console.error(`Error computing cost for ${place}: ${error}`);
+		return Promise.all(edgeCostPromises).then(edgesCosts => {
+
+			let edgesDiscrete: number[] = edgesCosts.map(cost => this.Discretizer.Discretize(cost));
+			let edgesEqual = this.AllEqual(...edgesDiscrete);
+
+			if (edgesEqual) {
+				if (this.Debug) this.Map.DrawRedRectangle(box, edgesCosts[0]);
+				return;
 			}
-		}
 
-		let edgesDiscrete: number[] = edgesCosts.map(cost => this.Discretizer.Discretize(cost));
-		let edgesEqual = this.AllEqual(...edgesDiscrete);
+			if (box.SizeLat < this.MinSize && box.SizeLong < this.MinSize) {
+				if (this.Debug) this.Map.DrawDarkRectangle(box);
+				let corners: Place[] = [box.SW, box.NW, box.NE, box.SE];
 
-		if (edgesEqual) {
-			if (this.Debug) this.Map.DrawRedRectangle(box, edgesCosts[0]);
-			return;
-		}
+				let cornerCostPromises = corners.map(place => this.ComputeCost(place));
 
-		if (box.SizeLat < this.MinSize && box.SizeLong < this.MinSize) {
-			if (this.Debug) this.Map.DrawDarkRectangle(box);
-			let corners: Place[] = [box.SW, box.NW, box.NE, box.SE];
-			let cornersCosts: number[] = [];
-			for (let place of corners) {
-				const cost = await this.ComputeCost(place);
-				cornersCosts.push(cost);
+				return Promise.all(cornerCostPromises).then(cornersCosts => {
+
+					let cornersDiscrete: number[] = cornersCosts.map(cost => this.Discretizer.Discretize(cost));
+					this.FindLines(corners, cornersCosts, cornersDiscrete);
+					return;
+				});
 			}
-			let cornersDiscrete: number[] = cornersCosts.map(cost => this.Discretizer.Discretize(cost));
-			this.FindLines(corners, cornersCosts, cornersDiscrete);
-			return;
-		}
-
-		this.Divide(box);
+			return this.Divide(box);
+		});
 	}
 
-	Divide(box: BoundingBox) {
+	Divide(box: BoundingBox): Promise<void> {
 		let childBoxes: BoundingBox[];
 		if (box.SizeLat > box.SizeLong) {
 			childBoxes = box.BoxGrid(3, 1);
 		} else {
 			childBoxes = box.BoxGrid(1, 3);
 		}
-		this.ExploreThem(childBoxes[1], childBoxes[0], childBoxes[2]);
+		return this.ExploreThem(childBoxes[1], childBoxes[0], childBoxes[2]);
 	}
 
-	ExploreThem(...boxes: BoundingBox[]) {
-		for (let box of boxes) {
-			this.Explore(box);
-		}
+	ExploreThem(...boxes: BoundingBox[]): Promise<void> {
+		let promises = boxes.map(box => this.Explore(box));
+		return Promise.all(promises).then(() => { });
 	}
 }
