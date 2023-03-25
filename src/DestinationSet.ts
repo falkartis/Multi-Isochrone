@@ -95,7 +95,7 @@ abstract class DestinationSet {
 
 	InternComputeCostFrom(origin: Place, calc: ICostCalculator): Promise<number> {
 		return new Promise<number>((resolve, reject) => {
-			let promises = this.Destinations.map(d => d.ComputeCostFrom(origin, calc));
+			let promises = this.Destinations.map(d => d.ComputeCostFrom(origin, calc).then(c => c * d.Weight));
 			Promise.all(promises).then(costs => {
 				resolve(this.AggregateCosts(costs));
 			});
@@ -110,7 +110,7 @@ export class AllDestinations extends DestinationSet implements IDestinationSet {
 		let totalCost: number = 0;
 		for (let i = 0; i < this.Destinations.length; i++) {
 			let cost = costs[i];
-			totalCost += cost * this.Destinations[i].Weight;
+			totalCost += cost;
 		}
 		return totalCost;
 	}
@@ -122,7 +122,7 @@ export class AnyDestination extends DestinationSet implements IDestinationSet {
 		let lowestCost: number = Number.POSITIVE_INFINITY;
 		for (let i = 0; i < this.Destinations.length; i++) {
 			let cost = costs[i];
-			let costWeight = cost * this.Destinations[i].Weight;
+			let costWeight = cost;
 			if (cost < lowestCost){
 				lowestCost = cost;
 			}
@@ -138,7 +138,7 @@ export class TwoOfThem extends DestinationSet implements IDestinationSet {
 		let secondLowestCost: number = Number.POSITIVE_INFINITY;
 		for (let i = 0; i < this.Destinations.length; i++) {
 			let cost = costs[i];
-			let costWeight = cost * this.Destinations[i].Weight;
+			let costWeight = cost;
 			if (cost < secondLowestCost) {
 				secondLowestCost = lowestCost;
 				lowestCost = cost;
