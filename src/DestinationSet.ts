@@ -130,5 +130,4 @@ export class TwoOfThem extends DestinationSet implements IDestinationSet {
 		else
 			return (lowestCost + secondLowestCost) / 2; // Divide by 2 because here we consider a circular path.
 	}
-
 }
