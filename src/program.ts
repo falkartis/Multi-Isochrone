@@ -13,6 +13,10 @@ window.addEventListener('load', function() {
 	console.log("In load");
 });
 
+declare global {
+    interface Window { googleMap: any; }
+}
+
 class Program {
 
 	RedrawTimer: ReturnType<typeof setTimeout>;
