@@ -42,7 +42,7 @@ class Program {
 		this.MapConnector = new GoogleMapsConnector(map);
 		this.CostCalculator = new HaversineDist();
 		this.DiscretizerOffset = 0;
-		this.DiscretizerStep = 0.25;
+		this.DiscretizerStep = 0.5;
 		this.Discretizer = new LnDiscretizer(this.DiscretizerStep, this.DiscretizerOffset);
 
 		this.MarkerSet = new AllMarkers([]);
@@ -300,15 +300,20 @@ class Program {
 				explorer.DestSet.ClearCostCache();
 				
 				let boxes: BoundingBox[] = this.MapConnector.GetBoundingBoxes();
-				
+				let i = 0;
 				for (let box of boxes) {
+					i++;
+					let ii = i;
+					console.time('Draw' + ii);
 					console.log({box});
 					box.ExpandBy(20);
 					let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 					explorer.SetMaxSize(boxSize/2);
 					explorer.SetMinSize(boxSize/30);
 					//explorer.Debug = true;
-					explorer.Explore(box);
+					explorer.Explore(box).then(()=>{
+						console.timeEnd('Draw' + ii);
+					});
 				}
 				this.SideBar();
 				this.Redrawing = false;

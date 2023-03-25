@@ -3,14 +3,17 @@ import { Place } from './index.js';
 export class BoundingBox {
 	Min: Place;
 	Max: Place;
+	Globe: boolean;
 	
-	constructor(place: Place, max?: Place) {
+	constructor(place: Place, max?: Place, globe?: boolean) {
 		this.Min = new Place(place.Lat, place.Long);
 		if (max == null) {
 			this.Max = new Place(place.Lat, place.Long);
 		} else {
 			this.Max = new Place(max.Lat, max.Long);
 		}
+		this.Globe = globe ?? false;
+		this.CheckGlobe();
 	}
 
 	get SW() {return new Place(this.Min.Lat, this.Min.Long); }
@@ -28,6 +31,14 @@ export class BoundingBox {
 	get SizeLat() { return this.Max.Lat - this.Min.Lat; }
 	get SizeLong() { return this.Max.Long - this.Min.Long; }
 
+	CheckGlobe() {
+		if (this.Globe) {
+			this.Min.Lat = Math.max(this.Min.Lat, -90);
+			this.Min.Long = Math.max(this.Min.Long, -180);
+			this.Max.Lat = Math.min(this.Max.Lat, 90);
+			this.Max.Long = Math.min(this.Max.Long, 180);
+		}
+	}
 	Edges(rows: number, cols: number): Place[] {
 		
 		const latInterval = this.SizeLat / rows;
@@ -60,7 +71,7 @@ export class BoundingBox {
 				const long1 = this.Min.Long + dLong * j;
 				const long2 = this.Min.Long + dLong * (j + 1);
 
-				grid.push(new BoundingBox(new Place(lat1, long1), new Place(lat2, long2)));
+				grid.push(new BoundingBox(new Place(lat1, long1), new Place(lat2, long2), this.Globe));
 			}
 		}
 
@@ -72,6 +83,7 @@ export class BoundingBox {
 		if (place.Lat > this.Max.Lat) { this.Max.Lat = place.Lat; }
 		if (place.Long < this.Min.Long) { this.Min.Long = place.Long; }
 		if (place.Long > this.Max.Long) { this.Max.Long = place.Long; }
+		this.CheckGlobe();
 	}
 	ExpandBy(percent: number) {
 		let perOne: number = percent / 100;
@@ -83,12 +95,14 @@ export class BoundingBox {
 		this.Max.Lat = this.Max.Lat + (latInc / 2);
 		this.Min.Long = this.Min.Long - (longInc / 2);
 		this.Max.Long = this.Max.Long + (longInc / 2);
+		this.CheckGlobe();
 	}
 	ExpandByDeg(deg: number) {
 		this.Min.Lat -= deg;
 		this.Max.Lat += deg;
 		this.Min.Long -= deg;
 		this.Max.Long += deg;
+		this.CheckGlobe();
 	}
 	ExpandLatBy(percent: number) {
 		let perOne: number = percent / 100;
@@ -96,6 +110,7 @@ export class BoundingBox {
 		let latInc: number = dLat * perOne;
 		this.Min.Lat = this.Min.Lat - (latInc / 2);
 		this.Max.Lat = this.Max.Lat + (latInc / 2);
+		this.CheckGlobe();
 	}
 	ExpandLongBy(percent: number) {
 		let perOne: number = percent / 100;
@@ -103,5 +118,6 @@ export class BoundingBox {
 		let longInc: number = dLong * perOne;
 		this.Min.Long = this.Min.Long - (longInc / 2);
 		this.Max.Long = this.Max.Long + (longInc / 2);
+		this.CheckGlobe();
 	}
 }

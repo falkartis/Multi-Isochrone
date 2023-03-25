@@ -48,19 +48,24 @@ export class Explorer {
 		let l2: Place|null = null;
 		switch (index) {
 			// CORNERS:
-			case 1:		case 14:	l1 = this.Interpolate(p[0], p[1], v[0], v[1]);	l2 = this.Interpolate(p[0], p[3], v[0], v[3]);	break;
-			case 2:		case 13:	l1 = this.Interpolate(p[1], p[0], v[1], v[0]);	l2 = this.Interpolate(p[1], p[2], v[1], v[2]);	break;
-			case 4:		case 11:	l1 = this.Interpolate(p[2], p[1], v[2], v[1]);	l2 = this.Interpolate(p[2], p[3], v[2], v[3]);	break;
-			case 7:		case 8:		l1 = this.Interpolate(p[3], p[0], v[3], v[0]);	l2 = this.Interpolate(p[3], p[2], v[3], v[2]);	break;
+			case 1:     case 14:    l1 = this.Interpolate(p[0], p[1], v[0], v[1]);  l2 = this.Interpolate(p[0], p[3], v[0], v[3]);  break;
+			case 2:     case 13:    l1 = this.Interpolate(p[1], p[0], v[1], v[0]);  l2 = this.Interpolate(p[1], p[2], v[1], v[2]);  break;
+			case 4:     case 11:    l1 = this.Interpolate(p[2], p[1], v[2], v[1]);  l2 = this.Interpolate(p[2], p[3], v[2], v[3]);  break;
+			case 7:     case 8:     l1 = this.Interpolate(p[3], p[0], v[3], v[0]);  l2 = this.Interpolate(p[3], p[2], v[3], v[2]);  break;
 			// LINE THROUGH:
-			case 6:		case 9:		l1 = this.Interpolate(p[0], p[1], v[0], v[1]);	l2 = this.Interpolate(p[2], p[3], v[2], v[3]);	break;
-			case 3:		case 12:	l1 = this.Interpolate(p[0], p[3], v[0], v[3]);	l2 = this.Interpolate(p[1], p[2], v[1], v[2]);	break;
+			case 6:     case 9:     l1 = this.Interpolate(p[0], p[1], v[0], v[1]);  l2 = this.Interpolate(p[2], p[3], v[2], v[3]);  break;
+			case 3:     case 12:    l1 = this.Interpolate(p[0], p[3], v[0], v[3]);  l2 = this.Interpolate(p[1], p[2], v[1], v[2]);  break;
 			// SADDLE POINT:
 			case 5:
 			case 10:
-				if (this.Debug) console.log("Saddle point not implemented.");
-				//TODO: implement saddle point.
+				l1 = this.Interpolate(p[0], p[1], v[0], v[1]);
+				l2 = this.Interpolate(p[2], p[3], v[2], v[3]);
+				let l3 = this.Interpolate(p[0], p[3], v[0], v[3]);
+				let l4 = this.Interpolate(p[1], p[2], v[1], v[2]);
+				this.Map.AddLine(l3, l4, discVal);
+				console.log("Saddle point yay.");
 				break;
+
 			// ALL EQUAL, SOLID COLOR, (Case handled somewhere else):
 			case 0:
 			case 15:
@@ -150,11 +155,12 @@ export class Explorer {
 		} else {
 			childBoxes = box.BoxGrid(1, 3);
 		}
-		return this.ExploreThem(childBoxes[1], childBoxes[0], childBoxes[2]);
+		let promises = [
+			this.Explore(childBoxes[1]),
+			this.Explore(childBoxes[0]),
+			this.Explore(childBoxes[2])
+		];
+		return Promise.all(promises).then(() => {});
 	}
 
-	ExploreThem(...boxes: BoundingBox[]): Promise<void> {
-		let promises = boxes.map(box => this.Explore(box));
-		return Promise.all(promises).then(() => { });
-	}
 }

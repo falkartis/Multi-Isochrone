@@ -9,6 +9,7 @@ export interface IDestination {
 	get Weight(): number;
 }
 export interface IDestinationSet extends IDestination {
+	//ComputeCostsFrom(origins: Place[], calc: ICostCalculator): Promise<number[]>;
 	AddDestination(dest: IDestination): void;
 }
 
@@ -73,61 +74,40 @@ abstract class DestinationSet {
 	}
 
 	ComputeCostFrom(origin: Place, calc: ICostCalculator): Promise<number> {
+		const cached = this.CostCache.Get(origin);
 
-		return new Promise<number> ((resolve, reject) => {
+		if (cached !== undefined) {
+			return Promise.resolve(cached);
+		}
 
-			const cached = this.CostCache.Get(origin);
+		const promises = this.Destinations.map(d =>
+			d.ComputeCostFrom(origin, calc).then(c => c * d.Weight)
+		);
 
-			if (cached !== undefined) {
-				resolve(cached);
-			} else {
-
-				this.InternComputeCostFrom(origin, calc).then(cost => {
-
-					if (!this.CostCache.ContainsKey(origin)) {
-						this.CostCache.Add(origin, cost);
-					}
-					resolve(cost);
-				});
+		return Promise.all(promises).then(costs => {
+			const cost = this.AggregateCosts(costs);
+			if (!this.CostCache.ContainsKey(origin)) {
+				this.CostCache.Add(origin, cost);
 			}
+			return cost;
 		});
 	}
 
-	InternComputeCostFrom(origin: Place, calc: ICostCalculator): Promise<number> {
-		return new Promise<number>((resolve, reject) => {
-			let promises = this.Destinations.map(d => d.ComputeCostFrom(origin, calc).then(c => c * d.Weight));
-			Promise.all(promises).then(costs => {
-				resolve(this.AggregateCosts(costs));
-			});
-		});
-	}
 	abstract AggregateCosts(costs: number[]): number;
+
 }
 
 export class AllDestinations extends DestinationSet implements IDestinationSet {
 
 	AggregateCosts(costs: number[]): number {
-		let totalCost: number = 0;
-		for (let i = 0; i < this.Destinations.length; i++) {
-			let cost = costs[i];
-			totalCost += cost;
-		}
-		return totalCost;
+		return costs.reduce((totalCost, cost) => totalCost + cost, 0);
 	}
 }
 
 export class AnyDestination extends DestinationSet implements IDestinationSet {
 
 	AggregateCosts(costs: number[]): number {
-		let lowestCost: number = Number.POSITIVE_INFINITY;
-		for (let i = 0; i < this.Destinations.length; i++) {
-			let cost = costs[i];
-			let costWeight = cost;
-			if (cost < lowestCost){
-				lowestCost = cost;
-			}
-		}
-		return lowestCost;
+		return Math.min(...costs);
 	}
 }
 
@@ -136,12 +116,13 @@ export class TwoOfThem extends DestinationSet implements IDestinationSet {
 	AggregateCosts(costs: number[]): number {
 		let lowestCost: number = Number.POSITIVE_INFINITY;
 		let secondLowestCost: number = Number.POSITIVE_INFINITY;
-		for (let i = 0; i < this.Destinations.length; i++) {
-			let cost = costs[i];
-			let costWeight = cost;
-			if (cost < secondLowestCost) {
+
+		for (let cost of costs){
+			if (cost < lowestCost) {
 				secondLowestCost = lowestCost;
 				lowestCost = cost;
+			} else if (cost < secondLowestCost) {
+				secondLowestCost = cost;
 			}
 		}
 		if (secondLowestCost == Number.POSITIVE_INFINITY)
@@ -149,4 +130,5 @@ export class TwoOfThem extends DestinationSet implements IDestinationSet {
 		else
 			return (lowestCost + secondLowestCost) / 2; // Divide by 2 because here we consider a circular path.
 	}
+
 }

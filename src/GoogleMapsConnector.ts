@@ -392,11 +392,11 @@ export class GoogleMapsConnector implements IMapConnector {
 
 		if (min.Long > max.Long) {
 			return [
-				new BoundingBox(min, new Place(max.Lat,  180)),
-				new BoundingBox(new Place(min.Lat, -180), max)
+				new BoundingBox(min, new Place(max.Lat,  180), true),
+				new BoundingBox(new Place(min.Lat, -180), max, true)
 			];
 		} else {
-			return [new BoundingBox(min, max)];
+			return [new BoundingBox(min, max, true)];
 		}
 	}
 }
