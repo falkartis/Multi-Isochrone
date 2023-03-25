@@ -14,11 +14,11 @@ export class Dictionary<TKey extends IHashCode, TValue> {
 	Add(key: TKey, value: TValue) {
 
 		if (this.ContainsKey(key)) {
-			throw new Error("Dictionary already contains key!", { key, value });
+			throw new Error("Dictionary already contains key!");
 		}
 		
-		let hc: number = key.GetHashCode();
-		let tuple: [TKey, TValue] = [key, value];
+		const hc: number = key.GetHashCode();
+		const tuple: [TKey, TValue] = [key, value];
 		let list = this.Data.get(hc);
 
 		if (list == undefined) {
@@ -32,32 +32,36 @@ export class Dictionary<TKey extends IHashCode, TValue> {
 	}
 
 	Set(key: TKey, newval: TValue) {
-		throw new Error("Not Implemented!");
-		//TODO:
-	}
-	Get(key: TKey): TValue|undefined {
-		let hc: number = key.GetHashCode();
-		let list = this.Data.get(hc) ?? [];
-		let val: TValue|undefined = undefined;
-		list.forEach(tuple => {
+		const hc: number = key.GetHashCode();
+		const list = this.Data.get(hc) ?? [];
+		for (let tuple of list) {
 			if (key.Equals(tuple[0])) {
-				val = tuple[1];
+				tuple[1] = newval;
+				return;
 			}
-		});
-		return val;
+		}
+		this.Add(key, newval);
 	}
+
 	Clear() {
 		this.Data = new Map<number, [TKey, TValue][]>();
 	}
-	ContainsKey(key: TKey): boolean {
+
+	Get(key: TKey): TValue|undefined {
 		let hc: number = key.GetHashCode();
-		let list = this.Data.get(hc) ?? [];
-		let val: boolean = false;
-		list.forEach(tuple => {
+		if (!this.Data.has(hc)) {
+			return undefined;
+		}
+		for (let tuple of this.Data.get(hc)!) {
 			if (key.Equals(tuple[0])) {
-				val = true;
+				return tuple[1];
 			}
-		});
-		return val;
+		}
+		return undefined;
 	}
+
+	ContainsKey(key: TKey): boolean {
+		return this.Get(key) !== undefined;
+	}
+
 }

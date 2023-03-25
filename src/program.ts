@@ -7,12 +7,10 @@ import { Explorer } from './Explorer.js';
 import { Place } from './index.js';
 
 
-function initMap() {
-	new Program();
-}
-window.initMap = initMap;
+console.log("In program.js");
 window.addEventListener('load', function() {
-	initMap();
+	new Program();
+	console.log("In load");
 });
 
 class Program {
@@ -29,15 +27,7 @@ class Program {
 
 	constructor() {
 
-		let mapdiv = document.getElementById("map");
-		if (mapdiv == null) {
-			throw new Error('No div with id map found.');
-		}
-
-		let map = new google.maps.Map(mapdiv, {
-			zoom: 2,
-			center: { lat: 0, lng: 0 },
-		});
+		let map = window.googleMap;
 
 		map.addListener("dblclick", 	(e) => { this.placeMarker(e.latLng, map); });
 		map.addListener("zoom_changed",	() => { this.Redraw(); });

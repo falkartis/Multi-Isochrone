@@ -34,7 +34,22 @@
 	</div>
 	<div id="markerSetUI"></div>
 	<div id="map"></div>
-	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&v=weekly" defer></script>
+	<script type="text/javascript">
+		function initMap() {
+			console.log("Google maps api sucks!");
+			
+			let mapdiv = document.getElementById("map");
+			if (mapdiv == null) {
+				throw new Error('No div with id map found.');
+			}
+			let map = new google.maps.Map(mapdiv, {
+				zoom: 2,
+				center: { lat: 0, lng: 0 },
+			});
+			window.googleMap = map;
+		}
+	</script>
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&v=quarterly&callback=initMap" defer></script>
 	<script type="module" src="./program.js"></script>
 </body>
 </html>
