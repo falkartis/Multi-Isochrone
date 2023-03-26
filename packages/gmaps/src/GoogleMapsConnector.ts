@@ -1,15 +1,16 @@
-import { IDestination } from '@multi-isochrone/core';
-
-
-// import { IDestination, WeightedPlace, IDestinationSet, AllDestinations, AnyDestination, TwoOfThem } from './DestinationSet.js';
-// import { IMapConnector } from './MapConnector.js';
-// import { BoundingBox } from './BoundingBox.js';
-// import { Place } from './index.js';
+import {
+	IDestination, IDestinationSet, WeightedPlace, AllDestinations, AnyDestination, TwoOfThem, IMapConnector, Place, BoundingBox
+} from '@multi-isochrone/core';
 
 export interface IMarker {
 	GetDestination(): IDestination;
 	NiceObj(): any;
-	RenderCRUD(parent: HTMLElement, callback: (newval: IMarker) => void, radioCb?: (set: IMarkerSet) => void, delCb?: (m: IMarker) => void);
+	RenderCRUD(
+		parent: HTMLElement,
+		callback: (newval: IMarker) => void,
+		radioCb?: (set: IMarkerSet) => void,
+		delCb?: (m: IMarker) => void
+	): void;
 	Name: string;
 }
 

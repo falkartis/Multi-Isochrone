@@ -1,12 +1,23 @@
-import { ICostCalculator, TaxicabDist, EightDirections, EuclideanDist, LatCorrectedEuclidean, HaversineDist } from './CostCalculator.js';
-import { LinearDiscretizer, LnDiscretizer, LogDiscretizer } from './Discretizer.js';
-import { IDestination, WeightedPlace, AllDestinations } from './DestinationSet.js';
-import { GoogleMapsConnector } from './GoogleMapsConnector.js';
-import { DefaultCostMatrixProvider } from './CostMatrix.js';
-import { IMapConnector } from './MapConnector.js';
-import { BoundingBox } from './BoundingBox.js';
-import { Explorer } from './Explorer.js';
-import { Place } from './index.js';
+import {
+	DefaultCostMatrixProvider,
+	AllDestinations,
+	ICostCalculator,
+	WeightedPlace,
+	LnDiscretizer,
+	HaversineDist,
+	IMapConnector,
+	EuclideanDist,
+	IDestination,
+	IDiscretizer,
+	BoundingBox,
+	Explorer,
+	Place,
+} from '@multi-isochrone/core';
+
+import {
+	GoogleMapsConnector,
+	IMarkerSet
+} from '@multi-isochrone/gmaps';
 
 // TODO: tidy this up
 let map: google.maps.Map;

@@ -1,8 +1,19 @@
-import { IHashCode } from './Dictionary.js';
-export { IDestination } from 'DestinationSet.js';
+export { ICostCalculator, HaversineDist, EuclideanDist, LatCorrectedEuclidean, TaxicabDist, EightDirections } from './CostCalculator.js';
+export { IDiscretizer, LnDiscretizer, Log2Discretizer, SqrtDiscretizer, Log10Discretizer, LinearDiscretizer } from './Discretizer.js';
+export { IDestination, IDestinationSet, WeightedPlace, AllDestinations, AnyDestination, TwoOfThem } from './DestinationSet.js';
+export { DefaultCostMatrixProvider } from './CostMatrix.js';
+export { IMapConnector } from './MapConnector.js';
+export { BoundingBox } from './BoundingBox.js';
+export { Dictionary } from './Dictionary.js';
+export { Explorer } from './Explorer.js';
 
 export function Lerp(v1: number, v2: number, t: number): number {
 	return v1 * (1 - t) + v2 * t;
+}
+
+export interface IHashCode {
+	GetHashCode(): number;
+	Equals(other: this): boolean;
 }
 
 export class Place implements IHashCode {

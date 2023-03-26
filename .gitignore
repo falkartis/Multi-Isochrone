@@ -1,2 +1,7 @@
 *.js
+
+*.d.ts
+*.d.ts.map
+
+node_modules/
 packages/*/node_modules/

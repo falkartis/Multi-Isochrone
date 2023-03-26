@@ -1,6 +1,6 @@
-import { IHashCode, Dictionary } from './Dictionary.js';
 import { ICostCalculator } from './CostCalculator.js';
-import { Place } from './index.js';
+import { IHashCode, Place } from './index.js';
+import { Dictionary } from './Dictionary.js';
 
 export interface ICostMatrixProvider {
 	CreateCostMatrix(origins: Place[], destinations: Place[]): Promise<CostMatrix>;

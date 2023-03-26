@@ -1,7 +1,4 @@
-export interface IHashCode {
-	GetHashCode(): number;
-	Equals(other: this): boolean;
-}
+import { IHashCode } from './index.js';
 
 export class Dictionary<TKey extends IHashCode, TValue> {
 	

@@ -1,11 +1,30 @@
-import { ICostCalculator, TaxicabDist, EightDirections, EuclideanDist, LatCorrectedEuclidean, HaversineDist } from './CostCalculator.js';
-import { GoogleMapsConnector, IMarkerSet, IMarker, ExtendedMarker, AllMarkers, AnyMarker, TwoMarkers } from './GoogleMapsConnector.js';
-import { IDiscretizer, LinearDiscretizer, LnDiscretizer, Log10Discretizer, Log2Discretizer, SqrtDiscretizer } from './Discretizer.js';
-import { IDestination, IDestinationSet, WeightedPlace, AllDestinations, AnyDestination, TwoOfThem } from './DestinationSet.js';
-import { DefaultCostMatrixProvider } from './CostMatrix.js';
-import { BoundingBox } from './BoundingBox.js';
-import { Explorer } from './Explorer.js';
-import { Place } from './index.js';
+import {
+	DefaultCostMatrixProvider,
+	LatCorrectedEuclidean,
+	LinearDiscretizer,
+	Log10Discretizer,
+	SqrtDiscretizer,
+	Log2Discretizer,
+	ICostCalculator,
+	EightDirections,
+	LnDiscretizer,
+	EuclideanDist,
+	HaversineDist,
+	IDiscretizer,
+	IDestination,
+	TaxicabDist,
+	BoundingBox,
+	Explorer,
+} from '@multi-isochrone/core';
+
+import {
+	GoogleMapsConnector,
+	ExtendedMarker,
+	IMarkerSet,
+	AllMarkers,
+	TwoMarkers,
+	AnyMarker,
+} from '@multi-isochrone/gmaps';
 
 console.log("In program.js");
 window.addEventListener('load', function() {
@@ -33,7 +52,8 @@ class Program {
 
 		let map = window.googleMap;
 
-		map.addListener("dblclick", 	(e) => { this.placeMarker(e.latLng, map); });
+		map.addListener("dblclick", 	(e: any) => { this.placeMarker(e.latLng, map); });
+		//map.addListener("dblclick", 	(e: google.maps.MouseEvent) => { this.placeMarker(e.latLng, map); });
 		map.addListener("zoom_changed",	() => { this.Redraw(); });
 		map.addListener("dragend",		() => { this.Redraw(); });
 
