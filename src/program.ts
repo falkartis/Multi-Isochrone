@@ -308,8 +308,8 @@ class Program {
 					console.log({box});
 					box.ExpandBy(20);
 					let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-					explorer.SetMaxSize(boxSize/2);
-					explorer.SetMinSize(boxSize/30);
+					explorer.MaxSize = boxSize/2;
+					explorer.MinSize = boxSize/30;
 					//explorer.Debug = true;
 					explorer.Explore(box).then(()=>{
 						console.timeEnd('Draw' + ii);

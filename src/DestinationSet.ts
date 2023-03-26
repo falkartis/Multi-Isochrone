@@ -96,31 +96,34 @@ abstract class DestinationSet implements IDestinationSet {
 
 	abstract AggregateCosts(costs: number[]): number;
 
-	ComputeCostsFrom(origins: Place[], costMatrix: CostMatrix): number[] {
+	GetCosts(origins: Place[], costMatrix: CostMatrix): number[] {
 		const allCosts: number[] = [];
-
 		for (const origin of origins) {
-			let costs: number[] = [];
-			for (const destination of this.Destinations) {
-				if (destination instanceof DestinationSet) {
-					costs.push(destination.ComputeCostsFrom([origin], costMatrix)[0]);
-				} else if (destination instanceof WeightedPlace) {
-					const destinationCost = costMatrix.get(origin, destination);
-					if (destinationCost === undefined) {
-						throw new Error("Expected costMatrix to be filled.");
-					}
-					costs.push(destination.Weight * destinationCost);
-				} else {
-					console.log({destination});
-					throw new Error("What kind of IDestination is this?");
-				}
-			}
-			let cost = this.AggregateCosts(costs);
-			allCosts.push(cost);
+			allCosts.push(this.GetCost(origin, costMatrix));
 		}
-
 		return allCosts;
 	}
+	GetCost(origin: Place, costMatrix: CostMatrix): number {
+		let costs: number[] = [];
+
+		for (const destination of this.Destinations) {
+			if (destination instanceof DestinationSet) {
+				const destinationCosts = destination.GetCost(origin, costMatrix);
+				costs.push(destinationCosts);
+			} else if (destination instanceof WeightedPlace) {
+				const destinationCost = costMatrix.get(origin, destination);
+				if (destinationCost === undefined) {
+					throw new Error("Expected costMatrix to be filled.");
+				}
+				costs.push(destination.Weight * destinationCost);
+			} else {
+				console.log({destination});
+				throw new Error("Unknown IDestination type.");
+			}
+		}
+		return this.AggregateCosts(costs);
+	}
+
 
 }
 

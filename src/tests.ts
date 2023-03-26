@@ -173,8 +173,8 @@ export class Tests {
 			for (let box of boxes) {
 				box.ExpandBy(50);
 				let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-				explorer.SetMaxSize(boxSize/2);
-				explorer.SetMinSize(boxSize/80);
+				explorer.MaxSize = boxSize/2;
+				explorer.MinSize = boxSize/80;
 				//explorer.Debug = true;
 				explorer.Explore(box);
 			}

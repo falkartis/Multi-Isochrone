@@ -39,23 +39,25 @@ export class BoundingBox {
 			this.Max.Long = Math.min(this.Max.Long, 180);
 		}
 	}
+
 	Edges(rows: number, cols: number): Place[] {
-		
 		const latInterval = this.SizeLat / rows;
 		const longInterval = this.SizeLong / cols;
+		// This method is expected to produce the 4 corners first.
+		const result: Place[] = [this.SW, this.NW, this.NE, this.SE];
 
-		const result: Place[] = [];
-		for (let i = 0; i <= rows; i++) {
+		for (let i = 1; i < rows; i++) {
 			const lat = this.Min.Lat + i * latInterval;
 			result.push(new Place(lat, this.Min.Long));
 			result.push(new Place(lat, this.Max.Long));
 		}
-		// Second loop has two less iterations to avoid repeating corners.
+
 		for (let i = 1; i < cols; i++) {
 			const long = this.Min.Long + i * longInterval;
 			result.push(new Place(this.Min.Lat, long));
 			result.push(new Place(this.Max.Lat, long));
 		}
+
 		return result;
 	}
 
