@@ -10,15 +10,31 @@ export interface ICostCalculator {
 }
 
 export class TaxicabDist implements ICostCalculator {
-	// TODO: Implement rotation, try to do as much as possible in the constructor.
+	private readonly CosAngle: number;
+	private readonly SinAngle: number;
+
+	constructor(rotationAngle?: number) {
+		const rotationAngle = DegToRad(rotationAngle ?? 0);
+		this.CosAngle = Math.cos(rotationAngle);
+		this.SinAngle = Math.sin(rotationAngle);
+	}
+
 	// TODO: Get the right units.
 	get Units(): string { return ""; }
 
+	private RotateCoordinates(lat: number, long: number): [number, number] {
+		const x = long * this.CosAngle - lat * this.SinAngle;
+		const y = long * this.SinAngle + lat * this.CosAngle;
+		return [x, y];
+	}
+
 	GetCost(p1: Place, p2: Place): Promise<number> {
 		return new Promise<number>((resolve, reject) => {
-			let dLat: number = Math.abs(p1.Lat - p2.Lat);
-			let dLong: number = Math.abs(p1.Long - p2.Long);
-			resolve(dLat + dLong);
+			const [x1, y1] = this.RotateCoordinates(p1.Lat, p1.Long);
+			const [x2, y2] = this.RotateCoordinates(p2.Lat, p2.Long);
+			const dX = Math.abs(x1 - x2);
+			const dY = Math.abs(y1 - y2);
+			resolve(dX + dY);
 		});
 	}
 }

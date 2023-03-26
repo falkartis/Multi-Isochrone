@@ -121,8 +121,6 @@ export class Explorer {
 
 	Explore(box: BoundingBox): Promise<void> {
 
-		if (this.Debug) console.log({SizeLat: box.SizeLat, SizeLong: box.SizeLong});
-
 		if (box.SizeLat > this.MaxSize || box.SizeLong > this.MaxSize) {
 			return this.Divide(box);
 		}

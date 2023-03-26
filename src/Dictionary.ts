@@ -64,4 +64,12 @@ export class Dictionary<TKey extends IHashCode, TValue> {
 		return this.Get(key) !== undefined;
 	}
 
+	ForEach(callbackfn: (key: TKey, value: TValue) => void) {
+		for (let tuples of this.Data.values()) {
+			for (let tuple of tuples) {
+				callbackfn(tuple[0], tuple[1]);
+			}
+		}
+	}
+
 }

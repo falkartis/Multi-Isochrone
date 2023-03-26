@@ -28,9 +28,23 @@ export class CostMatrix {
 		}
 		return innerDict;
 	}
+
+	Add(other: CostMatrix): void {
+		other.ForEach((origin, destination, cost) => {
+			this.set(origin, destination, cost);
+		});
+	}
+
+	ForEach(callback: (origin: Place, destination: Place, cost: number) => void): void {
+		this.data.ForEach((origin, innerDict) => {
+			innerDict.ForEach((destination, cost) => {
+				callback(origin, destination, cost);
+			});
+		});
+	}
 }
 
-export class DefaultMatrixProvider implements ICostMatrixProvider {
+export class DefaultCostMatrixProvider implements ICostMatrixProvider {
 	constructor(private readonly costCalculator: ICostCalculator) {}
 
 	createCostMatrix(origins: Place[], destinations: Place[]): Promise<CostMatrix> {
