@@ -2,8 +2,9 @@ import { IHashCode, Dictionary } from './Dictionary.js';
 import { ICostCalculator } from './CostCalculator.js';
 import { Place } from './index.js';
 
-interface ICostMatrixProvider {
-	createCostMatrix(origins: Place[], destinations: Place[]): Promise<CostMatrix>;
+export interface ICostMatrixProvider {
+	CreateCostMatrix(origins: Place[], destinations: Place[]): Promise<CostMatrix>;
+	FillMissing(origins: Place[], destinations: Place[], costMatrix: CostMatrix): Promise<void>;
 }
 
 export class CostMatrix {
@@ -21,12 +22,9 @@ export class CostMatrix {
 		innerDict.Set(destination, cost);
 	}
 
-	get(origin: Place, destination: Place): number {
-		const innerDict = this.data.Get(origin)?.Get(destination);
-		if (innerDict === undefined) {
-			throw new Error(`CostMatrix does not contain cost for origin ${origin} and destination ${destination}`);
-		}
-		return innerDict;
+	get(origin: Place, destination: Place): number|undefined {
+		const cost = this.data.Get(origin)?.Get(destination);
+		return cost;
 	}
 
 	Add(other: CostMatrix): void {
@@ -47,7 +45,7 @@ export class CostMatrix {
 export class DefaultCostMatrixProvider implements ICostMatrixProvider {
 	constructor(private readonly costCalculator: ICostCalculator) {}
 
-	createCostMatrix(origins: Place[], destinations: Place[]): Promise<CostMatrix> {
+	CreateCostMatrix(origins: Place[], destinations: Place[]): Promise<CostMatrix> {
 
 		const promises: Promise<void>[] = [];
 		const costMatrix = new CostMatrix();
@@ -64,8 +62,27 @@ export class DefaultCostMatrixProvider implements ICostMatrixProvider {
 		}
 		return Promise.all(promises).then(() => costMatrix);
 	}
+
+	FillMissing(origins: Place[], destinations: Place[], costMatrix: CostMatrix): Promise<void> {
+		const promises: Promise<void>[] = [];
+
+		// Iterate over all combinations of origins and destinations
+		for (const origin of origins) {
+			for (const destination of destinations) {
+				// Check if there is already a cost for this combination
+				if (!costMatrix.get(origin, destination)) {
+					// If there isn't, calculate the cost and set it in the costMatrix
+					const promise = this.costCalculator.GetCost(origin, destination)
+						.then(cost => {
+							costMatrix.set(origin, destination, cost);
+						});
+					promises.push(promise);
+				}
+			}
+		}
+
+		return Promise.all(promises).then(() => {});
+	}
+
+
 }
-
-
-
-

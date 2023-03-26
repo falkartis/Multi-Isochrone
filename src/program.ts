@@ -2,10 +2,10 @@ import { ICostCalculator, TaxicabDist, EightDirections, EuclideanDist, LatCorrec
 import { GoogleMapsConnector, IMarkerSet, IMarker, ExtendedMarker, AllMarkers, AnyMarker, TwoMarkers } from './GoogleMapsConnector.js';
 import { IDiscretizer, LinearDiscretizer, LnDiscretizer, Log10Discretizer, Log2Discretizer, SqrtDiscretizer } from './Discretizer.js';
 import { IDestination, IDestinationSet, WeightedPlace, AllDestinations, AnyDestination, TwoOfThem } from './DestinationSet.js';
+import { DefaultCostMatrixProvider } from './CostMatrix.js';
 import { BoundingBox } from './BoundingBox.js';
 import { Explorer } from './Explorer.js';
 import { Place } from './index.js';
-
 
 console.log("In program.js");
 window.addEventListener('load', function() {
@@ -285,7 +285,9 @@ class Program {
 
 		let dSet = this.MarkerSet.GetDestinationSet();
 
-		let explorer = new Explorer(dSet, 90, 45, this.Discretizer, this.CostCalculator, this.MapConnector);
+		let matrixProv = new DefaultCostMatrixProvider(this.CostCalculator);
+
+		let explorer = new Explorer(dSet, 90, 45, this.Discretizer, matrixProv, this.CostCalculator, this.MapConnector);
 
 		clearTimeout(this.RedrawTimer);
 

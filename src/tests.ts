@@ -1,12 +1,12 @@
 import { ICostCalculator, TaxicabDist, EightDirections, EuclideanDist, LatCorrectedEuclidean, HaversineDist } from './CostCalculator.js';
-import { LinearDiscretizer, LnDiscretizer, LogDiscretizer } from './Discretizer.js'
-import { IDestination, WeightedPlace, AllDestinations } from './DestinationSet.js'
-import { GoogleMapsConnector } from './GoogleMapsConnector.js'
-import { IMapConnector } from './MapConnector.js'
+import { LinearDiscretizer, LnDiscretizer, LogDiscretizer } from './Discretizer.js';
+import { IDestination, WeightedPlace, AllDestinations } from './DestinationSet.js';
+import { GoogleMapsConnector } from './GoogleMapsConnector.js';
+import { DefaultCostMatrixProvider } from './CostMatrix.js';
+import { IMapConnector } from './MapConnector.js';
 import { BoundingBox } from './BoundingBox.js';
 import { Explorer } from './Explorer.js';
 import { Place } from './index.js';
-
 
 // TODO: tidy this up
 let map: google.maps.Map;
@@ -137,7 +137,9 @@ export class Tests {
 		//let disc = new LnDiscretizer(0.1, 8965.5);
 		let disc = new LnDiscretizer(0.6, 8965.55);
 		//let disc = new LinearDiscretizer(200, 0);
-		let explorer: Explorer = new Explorer(dSet, boxSize/15, boxSize/50, disc, costCalc, mapConn);
+		let matrixProv = new DefaultCostMatrixProvider(costCalc);
+
+		let explorer: Explorer = new Explorer(dSet, boxSize/15, boxSize/50, disc, matrixProv, costCalc, mapConn);
 
 		explorer.Explore(box);
 

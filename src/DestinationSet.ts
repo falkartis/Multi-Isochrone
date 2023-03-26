@@ -6,9 +6,11 @@ import { Place } from './index.js';
 
 export interface IDestination {
 	ComputeCostFrom(origin: Place, calc: ICostCalculator): Promise<number>;
+	GetCosts(origins: Place[], costMatrix: CostMatrix): number[];
 	ClearCostCache(): void;
 	GetCentroid(): Place;
 	get Weight(): number;
+	GetPlaces(): Place[];
 }
 export interface IDestinationSet extends IDestination {
 	AddDestination(dest: IDestination): void;
@@ -34,6 +36,19 @@ export class WeightedPlace extends Place implements IDestination {
 	}
 	GetCentroid(): Place {
 		return new Place(this.Lat, this.Long);
+	}
+	GetPlaces(): Place[] {
+		return [new Place(this.Lat, this.Long)];
+	}
+	GetCosts(origins: Place[], costMatrix: CostMatrix): number[] {
+		const costs: number[] = [];
+		for (const origin of origins) {
+			const cost = costMatrix.get(origin, this);
+			if (cost === undefined)
+				throw new Error("WeightedPlace.GetCosts: CostMatrix lacks entries, it should be filled.");
+			costs.push(cost * this.Weight);
+		}
+		return costs;
 	}
 }
 
@@ -97,33 +112,32 @@ abstract class DestinationSet implements IDestinationSet {
 	abstract AggregateCosts(costs: number[]): number;
 
 	GetCosts(origins: Place[], costMatrix: CostMatrix): number[] {
+
+		//TODO: refactor this method! without AI!!!
 		const allCosts: number[] = [];
+
 		for (const origin of origins) {
-			allCosts.push(this.GetCost(origin, costMatrix));
+
+			let costs: number[] = [];
+			for (const destination of this.Destinations) {
+				const local = destination.GetCosts([origin], costMatrix);
+				costs.push(local[0]);
+			}
+			allCosts.push(this.AggregateCosts(costs));
 		}
 		return allCosts;
 	}
-	GetCost(origin: Place, costMatrix: CostMatrix): number {
-		let costs: number[] = [];
 
-		for (const destination of this.Destinations) {
-			if (destination instanceof DestinationSet) {
-				const destinationCosts = destination.GetCost(origin, costMatrix);
-				costs.push(destinationCosts);
-			} else if (destination instanceof WeightedPlace) {
-				const destinationCost = costMatrix.get(origin, destination);
-				if (destinationCost === undefined) {
-					throw new Error("Expected costMatrix to be filled.");
-				}
-				costs.push(destination.Weight * destinationCost);
-			} else {
-				console.log({destination});
-				throw new Error("Unknown IDestination type.");
-			}
+	GetPlaces(): Place[] {
+		let places: Place[] = [];
+
+		for (let dest of this.Destinations) {
+			let children = dest.GetPlaces();
+			places.push(...children);
 		}
-		return this.AggregateCosts(costs);
-	}
 
+		return places;
+	}
 
 }
 

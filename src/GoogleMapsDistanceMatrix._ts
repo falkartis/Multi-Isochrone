@@ -1,0 +1,69 @@
+import { CostMatrix, ICostMatrixProvider } from './CostMatrix.js';
+import { Place } from './index.js';
+import axios from 'axios';
+
+interface DistanceMatrixResponse {
+	rows: {
+		elements: {
+			distance: {
+				value: number;
+			};
+		}[];
+	}[];
+}
+
+export class GoogleCostMatrixProvider implements ICostMatrixProvider {
+	private readonly baseUrl = 'https://maps.googleapis.com/maps/api/distancematrix/json';
+
+	constructor(private readonly apiKey: string) {}
+
+	CreateCostMatrix(origins: Place[], destinations: Place[]): Promise<CostMatrix> {
+		const params = {
+			key: this.apiKey,
+			origins: origins.join('|'),
+			destinations: destinations.join('|'),
+			units: 'metric',
+		};
+
+		return axios.get<DistanceMatrixResponse>(this.baseUrl, { params }).then((response) => {
+			const costMatrix = new CostMatrix();
+			response.data.rows.forEach((row, i) => {
+				const origin = origins[i];
+				row.elements.forEach((element, j) => {
+					const destination = destinations[j];
+					const distance = element.distance.value;
+					costMatrix.set(origin, destination, distance);
+				});
+			});
+			return costMatrix;
+		});
+	}
+
+	FillMissing(origins: Place[], destinations: Place[], costMatrix: CostMatrix): Promise<void> {
+		const missingPairs: [Place, Place][] = [];
+
+		for (const origin of origins) {
+			for (const destination of destinations) {
+				if (!costMatrix.get(origin, destination)) {
+					missingPairs.push([origin, destination]);
+				}
+			}
+		}
+
+		//TODO: refactor the 2 lines, make the string like "37.7749,-122.4194".
+		//TODO: filter out repeated places.
+		const originsParam = missingPairs.map(pair => encodeURIComponent(pair[0])).join("|");
+		const destinationsParam = missingPairs.map(pair => encodeURIComponent(pair[1])).join("|");
+		const url = `https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=${originsParam}&destinations=${destinationsParam}&key=${this.apiKey}`;
+
+		return axios.get(url)
+			.then(response => {
+				const rows = response.data.rows;
+				for (let i = 0; i < missingPairs.length; i++) {
+					const [origin, destination] = missingPairs[i];
+					const cost = rows[i].elements[0].distance.value;
+					costMatrix.set(origin, destination, cost);
+				}
+			});
+	}
+}

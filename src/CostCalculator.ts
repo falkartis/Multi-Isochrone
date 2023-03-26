@@ -14,9 +14,9 @@ export class TaxicabDist implements ICostCalculator {
 	private readonly SinAngle: number;
 
 	constructor(rotationAngle?: number) {
-		const rotationAngle = DegToRad(rotationAngle ?? 0);
-		this.CosAngle = Math.cos(rotationAngle);
-		this.SinAngle = Math.sin(rotationAngle);
+		const rads = DegToRad(rotationAngle ?? 0);
+		this.CosAngle = Math.cos(rads);
+		this.SinAngle = Math.sin(rads);
 	}
 
 	// TODO: Get the right units.
