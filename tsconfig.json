@@ -1,13 +1,17 @@
 {
-    "compilerOptions": {
-        "target": "es6",
-        "module": "ES2015",
-        "rootDir": "./src",
-        "outDir": "./pub",
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "strict": true,
-        "noImplicitAny": false,
-        "skipLibCheck": true
-    }
+	"compilerOptions": {
+		"target": "es6",
+		"module": "es2015",
+		"rootDir": "./packages",
+		"outDir": "./dist",
+		"declaration": true,
+		"strict": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"noImplicitAny": true,
+		"skipLibCheck": false
+	},
+	"include": [
+		"./packages/**/*"
+	]
 }

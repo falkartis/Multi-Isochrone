@@ -1,0 +1,16 @@
+{
+	"name": "@multi-isochrone/gmaps",
+	"version": "0.2.0",
+	"main": "dist/index.js",
+	"typings": "dist/index.d.ts",
+	"scripts": {
+		"build": "tsc"
+	},
+	"dependencies": {
+		"@multi-isochrone/core": "^0.2.0",
+		"@types/google.maps": "^3.52.0"
+	},
+	"devDependencies": {
+		"typescript": "^4.5.4"
+	}
+}

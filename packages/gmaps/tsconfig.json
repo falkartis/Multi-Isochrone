@@ -1,0 +1,14 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "moduleResolution": "node",
+        "declarationDir": "dist/types",
+        "declarationMap": true,
+        "baseUrl": "../..",
+        "paths": {
+            "@multi-isochrone/core": ["packages/core/src"]
+        }
+    },
+    "include": ["src/**/*"],
+    "exclude": ["**/__tests__/**/*","**/*.test.ts"]
+}

@@ -1,4 +1,5 @@
 import { IHashCode } from './Dictionary.js';
+export { IDestination } from 'DestinationSet.js';
 
 export function Lerp(v1: number, v2: number, t: number): number {
 	return v1 * (1 - t) + v2 * t;
