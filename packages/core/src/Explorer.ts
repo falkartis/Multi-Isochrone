@@ -1,10 +1,10 @@
-import { IMapConnector, ConsoleLogConnector } from './MapConnector.js';
-import { CostMatrix, ICostMatrixProvider } from './CostMatrix.js';
-import { ICostCalculator } from './CostCalculator.js';
-import { IDestination } from './DestinationSet.js';
-import { IDiscretizer } from './Discretizer.js';
-import { BoundingBox } from './BoundingBox.js';
-import { Place } from './index.js';
+import { IMapConnector, ConsoleLogConnector } from './MapConnector';
+import { CostMatrix, ICostMatrixProvider } from './CostMatrix';
+import { ICostCalculator } from './CostCalculator';
+import { IDestination } from './DestinationSet';
+import { IDiscretizer } from './Discretizer';
+import { BoundingBox } from './BoundingBox';
+import { Place } from './index';
 
 class LineDrawer {
 	Map: IMapConnector;

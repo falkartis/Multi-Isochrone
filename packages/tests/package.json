@@ -5,8 +5,8 @@
     "typings": "dist/index.d.ts",
     "type": "module",
     "scripts": {
-        "dev": "parcel dist/index.html",
-        "build": "parcel build dist/index.html"
+        "dev": "parcel src/index.html",
+        "build": "parcel build src/index.html"
     },
     "dependencies": {
         "@multi-isochrone/core": "^0.2.0",
