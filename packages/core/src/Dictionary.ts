@@ -1,4 +1,4 @@
-import { IHashCode } from './index.js';
+import { IHashCode } from './index';
 
 export class Dictionary<TKey extends IHashCode, TValue> {
 	
