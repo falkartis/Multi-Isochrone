@@ -1,7 +1,7 @@
-import { ICostCalculator } from './CostCalculator.js';
-import { Dictionary } from './Dictionary.js';
-import { CostMatrix } from './CostMatrix.js';
-import { Place } from './index.js';
+import { ICostCalculator } from './CostCalculator';
+import { Dictionary } from './Dictionary';
+import { CostMatrix } from './CostMatrix';
+import { Place } from './index';
 
 
 export interface IDestination {

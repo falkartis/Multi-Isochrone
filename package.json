@@ -7,14 +7,12 @@
 		"packages/*"
 	],
 	"scripts": {
-		"build": "npm run build:core && npm run build:gmaps",
+		"dev": "cd packages/tests && npm run dev",
+		"build": "npm run build:core && npm run build:gmaps && npm run build:tests",
 		"build:core": "cd packages/core && npm run build",
-		"build:gmaps": "cd packages/gmaps && npm run build"
+		"build:gmaps": "cd packages/gmaps && npm run build",
+		"build:tests": "cd packages/tests && npm run build"
 	},
-
-
-
-
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/falkartis/Multi-Isochrone.git"
@@ -24,5 +22,8 @@
 	"bugs": {
 		"url": "https://github.com/falkartis/Multi-Isochrone/issues"
 	},
-	"homepage": "https://github.com/falkartis/Multi-Isochrone#readme"
+	"homepage": "https://github.com/falkartis/Multi-Isochrone#readme",
+	"devDependencies": {
+		"parcel-bundler": "^1.12.5"
+	}
 }

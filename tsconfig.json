@@ -3,7 +3,6 @@
 		"target": "es6",
 		"module": "es2015",
 		"rootDir": "./packages",
-		"outDir": "./dist",
 		"declaration": true,
 		"strict": true,
 		"esModuleInterop": true,

@@ -1,6 +1,6 @@
-import { WeightedPlace } from './DestinationSet.js';
-import { BoundingBox } from './BoundingBox.js';
-import { Place } from './index.js';
+import { WeightedPlace } from './DestinationSet';
+import { BoundingBox } from './BoundingBox';
+import { Place } from './index';
 
 export interface IMapConnector {
 	AddMarker(dest: WeightedPlace): void;

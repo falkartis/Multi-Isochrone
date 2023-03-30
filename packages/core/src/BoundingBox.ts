@@ -1,4 +1,4 @@
-import { Place } from './index.js';
+import { Place } from './index';
 
 export class BoundingBox {
 	Min: Place;

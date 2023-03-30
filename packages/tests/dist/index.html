@@ -4,9 +4,8 @@
 	<meta charset="UTF-8"> 
 	<title>Multi-Isochrone</title>
 	<script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-	<link rel="stylesheet" type="text/css" href="./style.css" />
-	<link rel="icon" type="image/x-icon" href="/favicon.svg">
-</head>
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<link rel="icon" type="image/x-icon" href="favicon.svg">
 <body>
 	<div id="topBar">
 		<div class="cont">
@@ -17,14 +16,14 @@
 					<option value="EightDirections">8 directions movement</option>
 					<option value="EuclideanDist">Euclidean distance</option>
 					<option value="LatCorrectedEuclidean">Latitude corrected euclidean distance</option>
-					<option value="HaversineDist" selected>Haversine distance</option>
+					<option value="HaversineDist" selected="">Haversine distance</option>
 				</select>
 			</label>
 			<label>
 				Discretizer: <br>
 				<select name="Discretizer">
 					<option value="LinearDiscretizer">LinearDiscretizer</option>
-					<option value="LnDiscretizer" selected>LnDiscretizer</option>
+					<option value="LnDiscretizer" selected="">LnDiscretizer</option>
 					<option value="Log10Discretizer">Log10Discretizer</option>
 					<option value="Log2Discretizer">Log2Discretizer</option>
 					<option value="LogDiscretizer">LogDiscretizer</option>
@@ -35,22 +34,22 @@
 	</div>
 	<div id="markerSetUI"></div>
 	<div id="map"></div>
-	<script type="text/javascript">
-		function initMap() {
-			console.log("Google maps api sucks!");
-			
-			let mapdiv = document.getElementById("map");
-			if (mapdiv == null) {
-				throw new Error('No div with id map found.');
-			}
-			let map = new google.maps.Map(mapdiv, {
-				zoom: 2,
-				center: { lat: 0, lng: 0 },
-			});
-			window.googleMap = map;
-		}
-	</script>
-	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&v=quarterly&callback=initMap" defer></script>
-	<script type="module" src="./program.js"></script>
+	<script>function initMap() {
+  console.log("Google maps api sucks!");
+  var mapdiv = document.getElementById("map");
+  if (mapdiv == null) {
+    throw new Error('No div with id map found.');
+  }
+  var map = new google.maps.Map(mapdiv, {
+    zoom: 2,
+    center: {
+      lat: 0,
+      lng: 0
+    }
+  });
+  window.googleMap = map;
+}</script>
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&v=quarterly&callback=initMap" defer=""></script>
+	<script src="/15f9ca15eaef07b6a5dc76cd6e202cd8.cd7a0c96.js"></script>
 </body>
 </html>
