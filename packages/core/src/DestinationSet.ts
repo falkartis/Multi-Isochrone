@@ -52,7 +52,7 @@ export class WeightedPlace extends Place implements IDestination {
 	}
 }
 
-abstract class DestinationSet implements IDestinationSet {
+export abstract class DestinationSet implements IDestinationSet {
 	readonly Destinations: IDestination[];
 	readonly CostCache: Dictionary<Place, number>;
 	readonly Weight: number;

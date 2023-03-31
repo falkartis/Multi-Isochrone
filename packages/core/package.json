@@ -5,7 +5,8 @@
 	"typings": "dist/index.d.ts",
 	"type": "module",
 	"scripts": {
-		"build": "tsc"
+		"dev": "parcel src/index.ts",
+		"build": "parcel build src/index.ts"
 	},
 	"dependencies": {},
 	"devDependencies": {

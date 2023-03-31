@@ -15,7 +15,7 @@ import {
 	TaxicabDist,
 	BoundingBox,
 	Explorer,
-} from '../../core/src';
+} from '../../core/dist';
 
 import {
 	GoogleMapsConnector,
@@ -24,7 +24,7 @@ import {
 	AllMarkers,
 	TwoMarkers,
 	AnyMarker,
-} from '../../gmaps/src';
+} from '../../gmaps/dist';
 
 console.log("In program.js");
 window.addEventListener('load', function() {

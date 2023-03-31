@@ -1,6 +1,6 @@
 import {
 	IDestination, IDestinationSet, WeightedPlace, AllDestinations, AnyDestination, TwoOfThem, IMapConnector, Place, BoundingBox
-} from '../../core/src';
+} from '../../core/dist';
 
 export interface IMarker {
 	GetDestination(): IDestination;

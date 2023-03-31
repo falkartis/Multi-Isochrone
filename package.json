@@ -7,7 +7,14 @@
 		"packages/*"
 	],
 	"scripts": {
-		"dev": "cd packages/tests && npm run dev",
+		"clean": "npm run clean:core && npm run clean:gmaps && npm run clean:tests",
+		"clean:core": "cd packages/core && parcel clean",
+		"clean:gmaps": "cd packages/gmaps && parcel clean",
+		"clean:tests": "cd packages/tests && parcel clean",
+		"dev": "npm run dev:core && npm run dev:gmaps && npm run dev:tests",
+		"dev:core": "cd packages/core && npm run dev",
+		"dev:gmaps": "cd packages/gmaps && npm run dev",
+		"dev:tests": "cd packages/tests && npm run dev",
 		"build": "npm run build:core && npm run build:gmaps && npm run build:tests",
 		"build:core": "cd packages/core && npm run build",
 		"build:gmaps": "cd packages/gmaps && npm run build",
