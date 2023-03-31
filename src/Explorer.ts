@@ -1,6 +1,5 @@
 import { IMapConnector, ConsoleLogConnector } from './MapConnector.js';
 import { CostMatrix, ICostMatrixProvider } from './CostMatrix.js';
-import { ICostCalculator } from './CostCalculator.js';
 import { IDestination } from './DestinationSet.js';
 import { IDiscretizer } from './Discretizer.js';
 import { BoundingBox } from './BoundingBox.js';
@@ -8,7 +7,6 @@ import { LineDrawer } from './LineDrawer.js';
 import { Place } from './index.js';
 
 export class Explorer {
-	CostCalculator: ICostCalculator; //TODO: nuke it
 	Discretizer: IDiscretizer;
 	DestSet: IDestination;
 	Map: IMapConnector;
@@ -19,12 +17,11 @@ export class Explorer {
 	RawCosts: CostMatrix;
 	CostMatrixProvider: ICostMatrixProvider;
 
-	constructor(dSet: IDestination, maxsize: number, minsize: number, disc: IDiscretizer, costMatProv: ICostMatrixProvider, costCalc: ICostCalculator, map?: IMapConnector) {
+	constructor(dSet: IDestination, disc: IDiscretizer, costMatProv: ICostMatrixProvider, map?: IMapConnector) {
 		this.DestSet = dSet;
-		this.maxSize = maxsize;
-		this.minSize = minsize;
+		this.maxSize = 10;
+		this.minSize = 1;
 
-		this.CostCalculator = costCalc;
 		this.CostMatrixProvider = costMatProv;
 		this.Discretizer = disc;
 		this.Map = map ?? new ConsoleLogConnector();
@@ -45,13 +42,11 @@ export class Explorer {
 	}
 
 	GetCosts(origins: Place[]): Promise<number[]> {
-		//Get destination places from this.DestSet.GetPlaces.
+
 		const dests = this.DestSet.GetPlaces();
-		const costs: number[] = [];
 
 		this.CostMatrixProvider.FillMissing(origins, dests, this.RawCosts);
 
-		// Get the baked costs from the DestSet and return them
 		return Promise.resolve(this.DestSet.GetCosts(origins, this.RawCosts));
 	}
 
@@ -71,7 +66,11 @@ export class Explorer {
 		return result;
 	}
 
-	Explore(box: BoundingBox): Promise<void> {
+	Explore(box: BoundingBox, maxsize: number, minsize: number): Promise<void> {
+		return this.InnerExplore(box);
+	}
+
+	InnerExplore(box: BoundingBox): Promise<void> {
 
 		if (box.SizeLat > this.MaxSize || box.SizeLong > this.MaxSize) {
 			return this.Divide(box);
@@ -109,9 +108,9 @@ export class Explorer {
 			childBoxes = box.BoxGrid(1, 3);
 		}
 		let promises = [
-			this.Explore(childBoxes[1]),
-			this.Explore(childBoxes[0]),
-			this.Explore(childBoxes[2])
+			this.InnerExplore(childBoxes[1]),
+			this.InnerExplore(childBoxes[0]),
+			this.InnerExplore(childBoxes[2])
 		];
 		return Promise.all(promises).then(() => {});
 	}

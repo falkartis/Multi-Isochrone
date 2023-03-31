@@ -139,9 +139,9 @@ export class Tests {
 		//let disc = new LinearDiscretizer(200, 0);
 		let matrixProv = new DefaultCostMatrixProvider(costCalc);
 
-		let explorer: Explorer = new Explorer(dSet, boxSize/15, boxSize/50, disc, matrixProv, costCalc, mapConn);
+		let explorer: Explorer = new Explorer(dSet, disc, matrixProv, mapConn);
 
-		explorer.Explore(box);
+		explorer.Explore(box, boxSize/15, boxSize/50);
 
 		console.log("explore() end");
 
@@ -175,10 +175,8 @@ export class Tests {
 			for (let box of boxes) {
 				box.ExpandBy(50);
 				let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-				explorer.MaxSize = boxSize/2;
-				explorer.MinSize = boxSize/80;
 				//explorer.Debug = true;
-				explorer.Explore(box);
+				explorer.Explore(box, boxSize/2, boxSize/80);
 			}
 			console.timeEnd('Redraw')
 		}, 1000);

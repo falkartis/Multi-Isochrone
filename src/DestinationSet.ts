@@ -116,8 +116,9 @@ abstract class DestinationSet implements IDestinationSet {
 
 			let costs: number[] = [];
 			for (const destination of this.Destinations) {
+
 				const local = destination.GetCosts([origin], costMatrix);
-				costs.push(local[0]);
+				costs.push(local[0] * destination.Weight);
 			}
 			allCosts.push(this.AggregateCosts(costs));
 		}

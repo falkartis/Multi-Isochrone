@@ -295,7 +295,6 @@ export class GoogleMapsConnector implements IMapConnector {
 		let colorStr: string = "" + color;
 		if (color < 100) colorStr = "0" + colorStr;
 		if (color < 10) colorStr = "0" + colorStr;
-		if (color < 1) colorStr = "0" + colorStr;
 		return "#" + colorStr
 	}
 

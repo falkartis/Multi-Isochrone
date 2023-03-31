@@ -81,6 +81,4 @@ export class DefaultCostMatrixProvider implements ICostMatrixProvider {
 			resolve();
 		});
 	}
-
-
 }

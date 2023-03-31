@@ -287,7 +287,7 @@ class Program {
 
 		let matrixProv = new DefaultCostMatrixProvider(this.CostCalculator);
 
-		let explorer = new Explorer(dSet, 90, 45, this.Discretizer, matrixProv, this.CostCalculator, this.MapConnector);
+		let explorer = new Explorer(dSet, this.Discretizer, matrixProv, this.MapConnector);
 
 		clearTimeout(this.RedrawTimer);
 
@@ -310,15 +310,13 @@ class Program {
 					console.log({box});
 					box.ExpandBy(20);
 					let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
-					explorer.MaxSize = boxSize/2;
-					explorer.MinSize = boxSize/30;
 					//explorer.Debug = true;
-					explorer.Explore(box).then(()=>{
+					explorer.Explore(box, boxSize/2, boxSize/30).then(()=>{
 						console.timeEnd('Draw' + ii);
+						this.Redrawing = false;
 					});
 				}
 				this.SideBar();
-				this.Redrawing = false;
 				console.timeEnd('Redraw');
 
 			}, 1000);
