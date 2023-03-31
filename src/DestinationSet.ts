@@ -5,7 +5,7 @@ import { Place } from './index.js';
 
 
 export interface IDestination {
-	ComputeCostFrom(origin: Place, calc: ICostCalculator): Promise<number>;
+	ComputeCostFrom(origin: Place, calc: ICostCalculator): number;
 	GetCosts(origins: Place[], costMatrix: CostMatrix): number[];
 	ClearCostCache(): void;
 	GetCentroid(): Place;
@@ -25,10 +25,9 @@ export class WeightedPlace extends Place implements IDestination {
 		this.Name = name ?? "";
 		this.Weight = weight;
 	}
-	ComputeCostFrom(origin: Place, calc: ICostCalculator): Promise<number> {
-		return calc.GetCost(origin, this).then(cost => {
-			return 2 * cost; // multiply by 2 because we consider roundtrip cost.
-		});
+	ComputeCostFrom(origin: Place, calc: ICostCalculator): number {
+		// multiply by 2 because we consider roundtrip cost.
+		return 2 * calc.GetCost(origin, this);
 	}
 
 	ClearCostCache(): void {
@@ -89,24 +88,21 @@ abstract class DestinationSet implements IDestinationSet {
 		this.ClearCostCache();
 	}
 
-	ComputeCostFrom(origin: Place, calc: ICostCalculator): Promise<number> {
+	ComputeCostFrom(origin: Place, calc: ICostCalculator): number {
 		const cached = this.CostCache.Get(origin);
 
 		if (cached !== undefined) {
-			return Promise.resolve(cached);
+			return cached;
 		}
 
-		const promises = this.Destinations.map(d =>
-			d.ComputeCostFrom(origin, calc).then(c => c * d.Weight)
-		);
+		const costs = this.Destinations.map(d => d.ComputeCostFrom(origin, calc) * d.Weight);
 
-		return Promise.all(promises).then(costs => {
-			const cost = this.AggregateCosts(costs);
-			if (!this.CostCache.ContainsKey(origin)) {
-				this.CostCache.Add(origin, cost);
-			}
-			return cost;
-		});
+		const cost = this.AggregateCosts(costs);
+
+		if (!this.CostCache.ContainsKey(origin)) {
+			this.CostCache.Add(origin, cost);
+		}
+		return cost;
 	}
 
 	abstract AggregateCosts(costs: number[]): number;

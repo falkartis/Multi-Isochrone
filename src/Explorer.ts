@@ -60,10 +60,6 @@ export class Explorer {
 		return args.every((val, i, arr) => val === arr[0]);
 	}
 
-	ComputeCost(p: Place): Promise<number> {
-		return this.DestSet.ComputeCostFrom(p, this.CostCalculator);
-	}
-
 	CornersEdgesAndCenter(box: BoundingBox): Place[] {
 		let result: Place[];
 		if (box.SizeLat > box.SizeLong) {
@@ -83,9 +79,7 @@ export class Explorer {
 
 		const places = this.CornersEdgesAndCenter(box);
 
-		let edgeCostPromises = places.map(place => this.ComputeCost(place));
-
-		return Promise.all(edgeCostPromises).then(edgesCosts => {
+		return this.GetCosts(places).then(edgesCosts=> {
 
 			let edgesDiscrete: number[] = edgesCosts.map(cost => this.Discretizer.Discretize(cost));
 			let edgesEqual = this.AllEqual(edgesDiscrete);

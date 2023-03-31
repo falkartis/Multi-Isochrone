@@ -43,45 +43,43 @@ export class CostMatrix {
 }
 
 export class DefaultCostMatrixProvider implements ICostMatrixProvider {
-	constructor(private readonly costCalculator: ICostCalculator) {}
+
+	private readonly CostCalculator: ICostCalculator;
+
+	constructor(costCalculator: ICostCalculator) {
+		this.CostCalculator = costCalculator;
+	}
 
 	CreateCostMatrix(origins: Place[], destinations: Place[]): Promise<CostMatrix> {
 
-		const promises: Promise<void>[] = [];
-		const costMatrix = new CostMatrix();
+		return new Promise<CostMatrix>((resolve, reject)=>{
 
-		for (const origin of origins) {
+			const costMatrix = new CostMatrix();
 
-			for (const destination of destinations) {
-				const promise = this.costCalculator.GetCost(origin, destination)
-					.then(cost => {
-						costMatrix.set(origin, destination, cost);
-					});
-				promises.push(promise);
+			for (const origin of origins) {
+
+				for (const destination of destinations) {
+					const cost = this.CostCalculator.GetCost(origin, destination);
+					costMatrix.set(origin, destination, cost);
+				}
 			}
-		}
-		return Promise.all(promises).then(() => costMatrix);
+			resolve(costMatrix);
+		});
 	}
 
 	FillMissing(origins: Place[], destinations: Place[], costMatrix: CostMatrix): Promise<void> {
-		const promises: Promise<void>[] = [];
 
-		// Iterate over all combinations of origins and destinations
-		for (const origin of origins) {
-			for (const destination of destinations) {
-				// Check if there is already a cost for this combination
-				if (!costMatrix.get(origin, destination)) {
-					// If there isn't, calculate the cost and set it in the costMatrix
-					const promise = this.costCalculator.GetCost(origin, destination)
-						.then(cost => {
-							costMatrix.set(origin, destination, cost);
-						});
-					promises.push(promise);
+		return new Promise<void>((resolve, reject)=>{
+			for (const origin of origins) {
+				for (const destination of destinations) {
+					if (!costMatrix.get(origin, destination)) {
+						const cost = this.CostCalculator.GetCost(origin, destination);
+						costMatrix.set(origin, destination, cost);
+					}
 				}
 			}
-		}
-
-		return Promise.all(promises).then(() => {});
+			resolve();
+		});
 	}
 
 
