@@ -14,7 +14,9 @@
 	},
 	"homepage": "https://github.com/falkartis/Multi-Isochrone#readme",
 	"dependencies": {
-		"@types/google.maps": "^3.52.0",
-		"svg.js": "^2.7.1"
+		"@svgdotjs/svg.draggable.js": "^3.0.3",
+		"@svgdotjs/svg.js": "^3.1.2",
+		"@svgdotjs/svg.panzoom.js": "^2.1.2",
+		"@types/google.maps": "^3.52.0"
 	}
 }
