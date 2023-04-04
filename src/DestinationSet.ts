@@ -42,7 +42,7 @@ export class WeightedPlace extends Place implements IDestination {
 	GetCosts(origins: Place[], costMatrix: CostMatrix): number[] {
 		const costs: number[] = [];
 		for (const origin of origins) {
-			const cost = costMatrix.get(origin, this);
+			const cost = costMatrix.Get(origin, this);
 			if (cost === undefined)
 				throw new Error("WeightedPlace.GetCosts: CostMatrix lacks entries, it should be filled.");
 			costs.push(cost * this.Weight);

@@ -14,7 +14,7 @@ export class CostMatrix {
 		this.data = new Dictionary<Place, Dictionary<Place, number>>();
 	}
 
-	set(origin: Place, destination: Place, cost: number): void {
+	Set(origin: Place, destination: Place, cost: number): void {
 		if (!this.data.ContainsKey(origin)) {
 			this.data.Add(origin, new Dictionary<Place, number>());
 		}
@@ -22,14 +22,17 @@ export class CostMatrix {
 		innerDict.Set(destination, cost);
 	}
 
-	get(origin: Place, destination: Place): number|undefined {
+	Get(origin: Place, destination: Place, invertDirection: boolean = false): number|undefined {
 		const cost = this.data.Get(origin)?.Get(destination);
+		if (cost === undefined && invertDirection) {
+			return this.Get(destination, origin, false);
+		}
 		return cost;
 	}
 
 	Add(other: CostMatrix): void {
 		other.ForEach((origin, destination, cost) => {
-			this.set(origin, destination, cost);
+			this.Set(origin, destination, cost);
 		});
 	}
 
@@ -60,7 +63,7 @@ export class DefaultCostMatrixProvider implements ICostMatrixProvider {
 
 				for (const destination of destinations) {
 					const cost = this.CostCalculator.GetCost(origin, destination);
-					costMatrix.set(origin, destination, cost);
+					costMatrix.Set(origin, destination, cost);
 				}
 			}
 			resolve(costMatrix);
@@ -72,9 +75,9 @@ export class DefaultCostMatrixProvider implements ICostMatrixProvider {
 		return new Promise<void>((resolve, reject)=>{
 			for (const origin of origins) {
 				for (const destination of destinations) {
-					if (!costMatrix.get(origin, destination)) {
+					if (!costMatrix.Get(origin, destination)) {
 						const cost = this.CostCalculator.GetCost(origin, destination);
-						costMatrix.set(origin, destination, cost);
+						costMatrix.Set(origin, destination, cost);
 					}
 				}
 			}
