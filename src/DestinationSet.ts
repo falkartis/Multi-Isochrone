@@ -5,9 +5,7 @@ import { Place } from './index.js';
 
 
 export interface IDestination {
-	ComputeCostFrom(origin: Place, calc: ICostCalculator): number;
 	GetCosts(origins: Place[], costMatrix: CostMatrix): number[];
-	ClearCostCache(): void;
 	GetCentroid(): Place;
 	get Weight(): number;
 	GetPlaces(): Place[];
@@ -25,20 +23,15 @@ export class WeightedPlace extends Place implements IDestination {
 		this.Name = name ?? "";
 		this.Weight = weight;
 	}
-	ComputeCostFrom(origin: Place, calc: ICostCalculator): number {
-		// multiply by 2 because we consider roundtrip cost.
-		return 2 * calc.GetCost(origin, this);
-	}
 
-	ClearCostCache(): void {
-		// Nothing to do here since we don't store costs on this class.
-	}
 	GetCentroid(): Place {
 		return new Place(this.Lat, this.Long);
 	}
+
 	GetPlaces(): Place[] {
 		return [new Place(this.Lat, this.Long)];
 	}
+
 	GetCosts(origins: Place[], costMatrix: CostMatrix): number[] {
 		const costs: number[] = [];
 		for (const origin of origins) {
@@ -53,7 +46,6 @@ export class WeightedPlace extends Place implements IDestination {
 
 abstract class DestinationSet implements IDestinationSet {
 	readonly Destinations: IDestination[];
-	readonly CostCache: Dictionary<Place, number>;
 	readonly Weight: number;
 	readonly Name: string;
 
@@ -61,14 +53,6 @@ abstract class DestinationSet implements IDestinationSet {
 		this.Destinations = destinations;
 		this.Weight = weight ?? 1;
 		this.Name = name ?? "";
-		this.CostCache = new Dictionary<Place, number>();
-	}
-
-	ClearCostCache(): void {
-		this.CostCache.Clear();
-		for (let dest of this.Destinations) {
-			dest.ClearCostCache();
-		}
 	}
 
 	GetCentroid() {
@@ -85,24 +69,6 @@ abstract class DestinationSet implements IDestinationSet {
 
 	AddDestination(dest: IDestination) {
 		this.Destinations.push(dest);
-		this.ClearCostCache();
-	}
-
-	ComputeCostFrom(origin: Place, calc: ICostCalculator): number {
-		const cached = this.CostCache.Get(origin);
-
-		if (cached !== undefined) {
-			return cached;
-		}
-
-		const costs = this.Destinations.map(d => d.ComputeCostFrom(origin, calc) * d.Weight);
-
-		const cost = this.AggregateCosts(costs);
-
-		if (!this.CostCache.ContainsKey(origin)) {
-			this.CostCache.Add(origin, cost);
-		}
-		return cost;
 	}
 
 	abstract AggregateCosts(costs: number[]): number;
@@ -171,4 +137,53 @@ export class TwoOfThem extends DestinationSet {
 		else
 			return (lowestCost + secondLowestCost) / 2; // Divide by 2 because here we consider a circular path.
 	}
+}
+
+export class TravellingSalesmanBest implements IDestinationSet {
+
+	readonly Destinations: IDestination[];
+	readonly Weight: number;
+	readonly Name: string;
+	readonly Costs: CostMatrix;
+
+	constructor(destinations: IDestination[], costs: CostMatrix, weight?: number, name?: string) {
+		this.Destinations = destinations;
+		this.Costs = costs;
+		this.Weight = weight ?? 1;
+		this.Name = name ?? "";
+	}
+	AddDestination(dest: IDestination) {
+		this.Destinations.push(dest);
+	}
+	GetCentroid() {
+		let lats: number = 0;
+		let longs: number = 0;
+		let weights: number = 0;
+		for (let dest of this.Destinations) {
+			lats += dest.GetCentroid().Lat * dest.Weight;
+			longs += dest.GetCentroid().Long * dest.Weight;
+			weights += dest.Weight;
+		}
+		return new Place(lats / weights, longs / weights);
+	}
+	GetPlaces(): Place[] {
+		let places: Place[] = [];
+
+		for (let dest of this.Destinations) {
+			let children = dest.GetPlaces();
+			places.push(...children);
+		}
+
+		return places;
+	}
+
+	GetCost(origin: Place, costMatrix: CostMatrix): number {
+		
+		throw new Error("Not implemented!");
+	}
+
+	GetCosts(origins: Place[], costMatrix: CostMatrix): number[] {
+		throw new Error("Not implemented!");
+	}
+
 }

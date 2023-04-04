@@ -78,12 +78,13 @@ export class Tests {
 		];
 		let dSet: IDestination = new AllDestinations(destinations);
 		let calc: ICostCalculator = new EuclideanDist();
-		let tCost: number = await dSet.ComputeCostFrom(new Place(0,0), calc);
-		if (tCost == 10) {
-			console.log("10 is OK");
-		} else {
-			console.log("Total cost is: " + tCost + "\n Expected 10.");
-		}
+		// TODO: rewrite this with CostMatrix.
+		// let tCost: number = await dSet.ComputeCostFrom(new Place(0,0), calc);
+		// if (tCost == 10) {
+		// 	console.log("10 is OK");
+		// } else {
+		// 	console.log("Total cost is: " + tCost + "\n Expected 10.");
+		// }
 	}
 	public static async testRealPlaces() {
 		let barcelona:	WeightedPlace = new WeightedPlace(41.3927754,	 2.0699778, 1);
@@ -95,12 +96,14 @@ export class Tests {
 		let origin: Place = new Place(46.8730811, 3.2886396);
 		let costCalc: ICostCalculator = new HaversineDist();
 		console.log({barcelona, paris, berlin, zurich, dSet, origin, costCalc});
-		let tCost: number = await dSet.ComputeCostFrom(origin, costCalc);
-		console.log("Total cost: " + tCost + "Km");
+		// TODO: rewrite this with CostMatrix.
+		// let tCost: number = await dSet.ComputeCostFrom(origin, costCalc);
+		// console.log("Total cost: " + tCost + "Km");
 		let centroid: Place = dSet.GetCentroid();
 		console.log(centroid);
-		let tCost2: number = await dSet.ComputeCostFrom(centroid, costCalc);
-		console.log("Total cost: " + tCost2 + "Km");
+		// TODO: rewrite this with CostMatrix.
+		// let tCost2: number = await dSet.ComputeCostFrom(centroid, costCalc);
+		// console.log("Total cost: " + tCost2 + "Km");
 
 	}
 	public static async testExplore() {
@@ -125,20 +128,22 @@ export class Tests {
 
 		let costCalc: ICostCalculator = new HaversineDist();
 		//let costCalc: CostCalculator = new LatCorrectedEuclideanDistance(centroid.Place.Lat);
-		let centroidCost: number = await dSet.ComputeCostFrom(centroidP, costCalc);
+		// TODO: rewrite this with CostMatrix.
+		// let centroidCost: number = await dSet.ComputeCostFrom(centroidP, costCalc);
+		//console.log({centroidCost});
 		mapConn.AddMarker(centroidWP);
-		console.log({centroidCost});
 
 		console.log("explore() start");
-		//let disc = new LnDiscretizer(0.1, centroidCost * 0.988);
-		//let disc = new LnDiscretizer(0.1, 8965.5);
-		let disc = new LnDiscretizer(0.6, 8965.55);
-		//let disc = new LinearDiscretizer(200, 0);
+		//let disc = new LnDiscretizer(0.1, 8965.55);
+
+		//let disc = new LinearDiscretizer(2000, -124);
+		//let disc = new LinearDiscretizer(2000, -124.5);
+		let disc = new LinearDiscretizer(2000, -124.25);
 		let matrixProv = new DefaultCostMatrixProvider(costCalc);
 
 		let explorer: Explorer = new Explorer(dSet, disc, matrixProv, mapConn);
 
-		explorer.Explore(box, boxSize/15, boxSize/50);
+		explorer.Explore(box, boxSize/5, boxSize/50);
 
 		console.log("explore() end");
 
@@ -167,13 +172,12 @@ export class Tests {
 		RedrawTimer = setTimeout(()=>{
 			console.time('Redraw');
 			mapConn.ClearLines();
-			explorer.DestSet.ClearCostCache();
 			let boxes: BoundingBox[] = mapConn.GetBoundingBoxes();
 			for (let box of boxes) {
 				box.ExpandBy(50);
 				let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 				//explorer.Debug = true;
-				explorer.Explore(box, boxSize/2, boxSize/80);
+				explorer.Explore(box, boxSize/5, boxSize/50);
 			}
 			console.timeEnd('Redraw')
 		}, 1000);

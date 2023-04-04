@@ -299,7 +299,6 @@ class Program {
 				this.Redrawing = true;
 				//console.log(this.MarkerSet.NiceObj());
 				this.MapConnector.ClearLines();
-				explorer.DestSet.ClearCostCache();
 				
 				let boxes: BoundingBox[] = this.MapConnector.GetBoundingBoxes();
 				let i = 0;
