@@ -24,6 +24,8 @@ window.addEventListener('load', function() {
 	mapConn = new GoogleMapsConnector(window.googleMap);
 	console.log("testTotalCost:");
 	Tests.testTotalCost();
+	console.log("testCostCalculators:");
+	Tests.testCostCalculators();
 	console.log("testRealPlaces:");
 	Tests.testRealPlaces();
 	console.log("testExplore:");
@@ -176,6 +178,45 @@ export class Tests {
 			console.timeEnd('Redraw')
 		}, 1000);
 
+	}
+
+	public static testCostCalculators() {
+		//ICostCalculator, TaxicabDist, EightDirections, EuclideanDist, LatCorrectedEuclidean, HaversineDist
+		let costCalc: ICostCalculator;
+		// Test zero dist:
+		let random = (min: number, max: number): number => {
+		  return Math.random() * (max - min) + min;
+		};
+		let assert = (condition: unknown, msg?: string) => {
+			if (condition === false) throw new Error(msg);
+		};
+
+		let lat = random(-90, 90);
+		let long = random(-180, 180);
+		let origin: Place = new Place(lat, long);
+		let destination: Place = new Place(lat, long);
+		let cost: number;
+
+		cost = new TaxicabDist().GetCost(origin, destination);
+		assert(cost === 0);
+		cost = new TaxicabDist(random(0, 360)).GetCost(origin, destination);
+		assert(cost === 0);
+
+		cost = new EightDirections().GetCost(origin, destination);
+		assert(cost === 0);
+		cost = new EightDirections(1).GetCost(origin, destination);
+		assert(cost === 0);
+		cost = new EightDirections(2).GetCost(origin, destination);
+		assert(cost === 0);
+
+		cost = new EuclideanDist().GetCost(origin, destination);
+		assert(cost === 0);
+
+		cost = new LatCorrectedEuclidean(origin.Lat).GetCost(origin, destination);
+		assert(cost === 0);
+
+		cost = new HaversineDist().GetCost(origin, destination);
+		assert(cost === 0);
 	}
 }
 
