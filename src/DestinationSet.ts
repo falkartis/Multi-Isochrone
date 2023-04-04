@@ -146,6 +146,9 @@ export class TravellingSalesmanBest implements IDestinationSet {
 	readonly Name: string;
 	readonly Costs: CostMatrix;
 
+	private CheapestPath: Place[] = [];
+	private CheapestCost: number = Number.POSITIVE_INFINITY;
+
 	constructor(destinations: IDestination[], costs: CostMatrix, weight?: number, name?: string) {
 		this.Destinations = destinations;
 		this.Costs = costs;
@@ -177,13 +180,71 @@ export class TravellingSalesmanBest implements IDestinationSet {
 		return places;
 	}
 
+	GetPathCost(destinations: Place[], costMatrix: CostMatrix): number {
+		let totalCost = 0;
+
+		// Starting with 1 instead of 0 because we substract 1 from i to get the from place.
+		for (let i = 1; i < destinations.length; i++) {
+
+			let from = destinations[i-1];
+			let to = destinations[i];
+			// third parameter is invertDirection, set to true to swap from and to if necessary.
+			let cost = costMatrix.Get(from, to, true) as number;
+			totalCost += cost;
+		}
+		return totalCost;
+	}
+
+	SearchBest(destinations: Place[], currentPath: Place[], costMatrix: CostMatrix) {
+
+		let branchesHere = 0;
+		for (let dest of destinations) {
+
+			if (currentPath.indexOf(dest) === -1) {
+
+				branchesHere++;
+
+				let newPath = currentPath.concat([dest]);
+				this.SearchBest(destinations, newPath, costMatrix);
+			}
+		}
+
+		if (branchesHere === 0) {
+			// We are at one of the many tips of the tree!
+
+			let cost = this.GetPathCost(currentPath, costMatrix);
+
+			if (cost < this.CheapestCost) {
+				this.CheapestCost = cost;
+				this.CheapestPath = currentPath;
+			}
+		}
+	}
+
 	GetCost(origin: Place, costMatrix: CostMatrix): number {
-		
-		throw new Error("Not implemented!");
+
+		this.CheapestCost = Number.POSITIVE_INFINITY;
+
+		let places = this.GetPlaces();
+
+		this.SearchBest(places, [origin], costMatrix);
+
+		return this.CheapestCost;
 	}
 
 	GetCosts(origins: Place[], costMatrix: CostMatrix): number[] {
-		throw new Error("Not implemented!");
+
+		let newCostMat = new CostMatrix();
+
+		newCostMat.Add(this.Costs);
+		newCostMat.Add(costMatrix);
+
+		let costs: number[] = [];
+		for (let origin of origins) {
+			let cost = this.GetCost(origin, newCostMat);
+			costs.push(cost);
+		}
+		return costs;
 	}
 
 }

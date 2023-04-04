@@ -1,6 +1,6 @@
 import { ICostCalculator, TaxicabDist, EightDirections, EuclideanDist, LatCorrectedEuclidean, HaversineDist } from './CostCalculator.js';
+import { IDestination, WeightedPlace, AllDestinations, TravellingSalesmanBest } from './DestinationSet.js';
 import { LinearDiscretizer, LnDiscretizer, LogDiscretizer } from './Discretizer.js';
-import { IDestination, WeightedPlace, AllDestinations } from './DestinationSet.js';
 import { GoogleMapsConnector } from './GoogleMapsConnector.js';
 import { DefaultCostMatrixProvider } from './CostMatrix.js';
 import { IMapConnector } from './MapConnector.js';
@@ -28,8 +28,14 @@ window.addEventListener('load', function() {
 	Tests.testCostCalculators();
 	console.log("testRealPlaces:");
 	Tests.testRealPlaces();
-	console.log("testExplore:");
-	Tests.testExplore();
+
+	if (Math.random() < 0.5) {
+		console.log("testExplore:");
+		Tests.testExplore();
+	} else {
+		console.log("testTravelingSalesman:");
+		Tests.testTravelingSalesman();
+	}
 });
 
 
@@ -161,8 +167,8 @@ export class Tests {
 		b.addEventListener('click', function(e){ Tests.Redraw(explorer); });
 		logTag.appendChild(b);
 
-		window.googleMap.addListener("zoom_changed", () => { Tests.Redraw(explorer); });
-		window.googleMap.addListener("dragend", () => { 		Tests.Redraw(explorer);	});
+		window.googleMap.addListener("zoom_changed", () => {	Tests.Redraw(explorer); });
+		window.googleMap.addListener("dragend", () => {			Tests.Redraw(explorer);	});
 	}
 
 	public static Redraw(explorer: Explorer){
@@ -189,7 +195,7 @@ export class Tests {
 		let costCalc: ICostCalculator;
 		// Test zero dist:
 		let random = (min: number, max: number): number => {
-		  return Math.random() * (max - min) + min;
+			return Math.random() * (max - min) + min;
 		};
 		let assert = (condition: unknown, msg?: string) => {
 			if (condition === false) throw new Error(msg);
@@ -221,6 +227,40 @@ export class Tests {
 
 		cost = new HaversineDist().GetCost(origin, destination);
 		assert(cost === 0);
+	}
+
+	public static testTravelingSalesman() {
+		let random = (min: number, max: number): number => {
+			return Math.random() * (max - min) + min;
+		};
+
+		let paris:		WeightedPlace = new WeightedPlace(48.8589465,	 2.2768239, 7);
+		let berlin:		WeightedPlace = new WeightedPlace(52.50697,		13.2843069, 7);
+		let barcelona:	WeightedPlace = new WeightedPlace(41.3927754,	 2.0699778, 2);
+		let zurich:		WeightedPlace = new WeightedPlace(47.3774682,	 8.3930421, 3);
+		
+		let places = [barcelona, paris, berlin, zurich];
+
+		let matProv = new DefaultCostMatrixProvider(new HaversineDist());
+
+		matProv.CreateCostMatrix(places, places).then(mat => {
+
+			let tsp = new TravellingSalesmanBest(places, mat);
+
+			let disc = new LinearDiscretizer(5000, 0);
+			let explorer: Explorer = new Explorer(tsp, disc, matProv, mapConn);
+
+			let box = new BoundingBox(new Place(-90, -180), new Place(90, 180));
+
+			explorer.Explore(box, 30, 6);
+
+			for (let dest of places) {
+				mapConn.AddMarker(dest);
+			}
+			window.googleMap.addListener("zoom_changed", () => {	Tests.Redraw(explorer); });
+			window.googleMap.addListener("dragend", () => {			Tests.Redraw(explorer);	});
+		});
+
 	}
 }
 
