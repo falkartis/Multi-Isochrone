@@ -11,27 +11,24 @@ import { Place } from './index.js';
 // TODO: tidy this up
 let map: google.maps.Map;
 
-let mapConn: IMapConnector;
-
-export function initMap(): void {
-
-	const myLatLng = { lat: 0, lng: 0 };
-	map = new google.maps.Map(
-		document.getElementById("map") as HTMLElement,
-		{
-			zoom: 2,
-			center: { lat: 0, lng: 0 },
-		}
-	);
-	mapConn = new GoogleMapsConnector(map);
-}
+var mapConn: IMapConnector;
 
 declare global {
-	interface Window {
-		initMap: () => void;
-	}
+	interface Window { googleMap: any; }
 }
-window.initMap = initMap;
+
+window.addEventListener('load', function() {
+	
+	console.log("In load");
+
+	mapConn = new GoogleMapsConnector(window.googleMap);
+	console.log("testTotalCost:");
+	Tests.testTotalCost();
+	console.log("testRealPlaces:");
+	Tests.testRealPlaces();
+	console.log("testExplore:");
+	Tests.testExplore();
+});
 
 
 const form = document.getElementById("markerForm") as HTMLFormElement;
@@ -39,8 +36,6 @@ const formWheight = document.getElementById("wheight") as HTMLInputElement;
 const formLat = document.getElementById("lat") as HTMLInputElement;
 const formLong = document.getElementById("long") as HTMLInputElement;
 const logTag = document.getElementById("log") as HTMLElement;
-
-
 
 form.onsubmit = () => {
 
@@ -159,8 +154,8 @@ export class Tests {
 		b.addEventListener('click', function(e){ Tests.Redraw(explorer); });
 		logTag.appendChild(b);
 
-		map.addListener("zoom_changed", () => { Tests.Redraw(explorer); });
-		map.addListener("dragend", () => { 		Tests.Redraw(explorer);	});
+		window.googleMap.addListener("zoom_changed", () => { Tests.Redraw(explorer); });
+		window.googleMap.addListener("dragend", () => { 		Tests.Redraw(explorer);	});
 	}
 
 	public static Redraw(explorer: Explorer){
@@ -184,12 +179,3 @@ export class Tests {
 	}
 }
 
-
-document.body.onload = function() {
-	console.log("testTotalCost:");
-	Tests.testTotalCost();
-	console.log("testRealPlaces:");
-	Tests.testRealPlaces();
-	console.log("testExplore:");
-	Tests.testExplore();
-}

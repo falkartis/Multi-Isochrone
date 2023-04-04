@@ -14,7 +14,7 @@ window.addEventListener('load', function() {
 });
 
 declare global {
-    interface Window { googleMap: any; }
+	interface Window { googleMap: any; }
 }
 
 class Program {
