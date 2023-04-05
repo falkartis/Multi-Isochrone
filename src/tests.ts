@@ -144,7 +144,7 @@ export class Tests {
 
 		//let disc = new LinearDiscretizer(2000, -124);
 		//let disc = new LinearDiscretizer(2000, -124.5);
-		let disc = new LinearDiscretizer(2000, -124.25);
+		let disc = new LinearDiscretizer(5000, -124.25);
 		let matrixProv = new DefaultCostMatrixProvider(costCalc);
 
 		let explorer: Explorer = new Explorer(dSet, disc, matrixProv, mapConn);
@@ -183,7 +183,7 @@ export class Tests {
 				box.ExpandBy(50);
 				let boxSize: number = Math.min(box.SizeLat, box.SizeLong);
 				//explorer.Debug = true;
-				explorer.Explore(box, boxSize/5, boxSize/50);
+				explorer.Explore(box, boxSize/3, boxSize/15);
 			}
 			console.timeEnd('Redraw')
 		}, 1000);
@@ -247,12 +247,12 @@ export class Tests {
 
 			let tsp = new TravellingSalesmanBest(places, mat);
 
-			let disc = new LinearDiscretizer(5000, 0);
+			let disc = new LnDiscretizer(0.5, 0);
 			let explorer: Explorer = new Explorer(tsp, disc, matProv, mapConn);
 
 			let box = new BoundingBox(new Place(-90, -180), new Place(90, 180));
 
-			explorer.Explore(box, 30, 6);
+			explorer.Explore(box, 30, 15);
 
 			for (let dest of places) {
 				mapConn.AddMarker(dest);
